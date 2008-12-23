@@ -11,53 +11,75 @@
 #endif
 #include ".\Protocoltest\Controller.h"
 
-class CBusPort:CBusProtocol
+class CBusPort:public CBusProtocol
 {
 private:
 	IBus *m_bus;
+	IDevice *m_parent;
+	DWORD m_ErrCode;
 public:
-	CBusPort(IBus *bus)
+	CBusPort(IDevice *parent,IBus *bus)
 	{
 		bus->AddRef();
-		m_bus = bus;	
+		m_bus = bus;
+		m_parent = parent;
+		m_ErrCode = 0;
 	}
 
 	virtual ~CBusPort()
 	{
-		m_bus->Release();	
+		m_bus->Release();
+		m_parent->Release();
 	}
-	virtual VOID SendData(CProtocol *p, DWORD nTimeout, LPVOID lParam) throw(...) 
+	virtual DWORD GetErrCode()
+	{
+		return m_ErrCode;
+	}
+	virtual BOOL SendData(CProtocol *p, DWORD nTimeout, LPVOID lParam)
 	{
 	    #pragma warning(suppress: 6014)
+		m_ErrCode = 0;
 		HANDLE e;
 		CComObject<CBusPortData>* t = new CComObject<CBusPortData>;
-		t->Init(p, nTimeout, (LPVOID)this);
+//		CComObject<CBusPortData>* t;
+			
+//		CComObject<CBusPortData>::CreateInstance(&t);
+
+		t->Init(m_parent, p, nTimeout, (LPVOID)this);
+
 		IBusPortData* pDisp;
 		t->QueryInterface(IID_IBusPortData, (void**)&pDisp);
 		ATLASSERT(pDisp);
-		m_bus->SendData(pDisp);
-		pDisp->Release();
+
 		if( nTimeout != 0 )
 		{
+			e = (HANDLE) t->GetParam(EVENT_ID);
+			m_bus->SendData(pDisp);
+//			
 			WaitForSingleObject( e, INFINITE );
+			if( t->GetErrCode() != 0 )
+			{
+				m_ErrCode = t->GetErrCode();
+				pDisp->Release();
+				return FALSE;
+			}
 			if( p->GetBuffer((CBusData *)t) )
 			{
-				t->Release();
-				throw p->GetErrCode();
+				pDisp->Release();
+				m_ErrCode = p->GetErrCode();
+				
+				return FALSE;
 			}
-			t->Release();
+			pDisp->Release();
 		}
-
+		return TRUE;
 	}
 	virtual BOOL SendData( CBusData * newVal )
 	{
 
 		return TRUE;
 	}
-	virtual DWORD GetErrCode(VOID)
-	{
-		return 0;	
-	}
+
 };
 
 
@@ -71,13 +93,20 @@ class ATL_NO_VTABLE CAMJ03 :
 	public CController,
 	public IDispatchImpl<IDevice, &__uuidof(IDevice), &LIBID_AnvizOcxLib, /* wMajor = */ 1, /* wMinor = */ 0>
 	{
+	private:
+		CBusPort *m_bus;
 	public:
 		//	virtual ULONG AddRef_in(void);
 		//	virtual ULONG Release_In(void);
-		CAMJ03():CController()
+		CAMJ03()
 			{
-
+				m_bus = NULL;
 			}
+		virtual ~CAMJ03()
+		{
+			if( m_bus )
+				UnlinkBus();
+		}
 
 		DECLARE_REGISTRY_RESOURCEID(IDR_AMJ03)
 

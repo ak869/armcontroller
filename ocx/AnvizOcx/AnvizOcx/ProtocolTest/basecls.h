@@ -25,6 +25,7 @@ public:
 	virtual BOOL SetBuffer(BYTE *Buf, int nSize) = 0;
 	virtual VOID *GetParam(long id) = 0;
 	virtual VOID SetParam(long id, VOID *lParam) = 0;
+	virtual DWORD GetErrCode(void) = 0;
 //	virtual void RecvOver(void) = 0;
 };
 
@@ -49,19 +50,20 @@ public:
 	virtual BOOL GetBuffer(CBusData *Buffer) = 0;
 };
 #define BUSPROTOCOL	0x2000
-class CBusProtocol :CBus
+class CBusProtocol : 
+	public CBus
 {
 public:
 	CBusProtocol(){}
 	virtual ~CBusProtocol(){}
-	virtual VOID SendData(CProtocol *p, DWORD nTimeout, LPVOID lParam) = 0;
+	virtual BOOL SendData(CProtocol *p, DWORD nTimeout, LPVOID lParam) = 0;
 };
 
-class CMachine
+class CDevice
 {
 public:
-	CMachine(){}
-	virtual ~CMachine(){}
+	CDevice(){}
+	virtual ~CDevice(){}
 
 	virtual ULONG InRelease(void) = 0;
 	virtual ULONG InAddRef(void) = 0;

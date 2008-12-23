@@ -143,8 +143,14 @@ STDMETHODIMP CAMJ03::LinkBus(IBus * newValue)
 	{
 	// TODO: Add your implementation code here
 //		newValue->Send
-		CBusPort *bus = new CBusPort(newValue);
-		CController::LinkBusPort( (CBusProtocol *)bus );
+		if( m_bus )
+			UnlinkBus();
+
+		IDevice *pdv;
+		this->QueryInterface(IID_IDevice,(void**)&pdv);
+		ATLASSERT(pdv);
+		m_bus = new CBusPort( pdv, newValue);
+		CController::LinkBusPort( (CBusProtocol *)m_bus );
 		return S_OK;
 	}
 
@@ -153,5 +159,6 @@ STDMETHODIMP CAMJ03::UnlinkBus(void)
 	// TODO: Add your implementation code here
 
 		CController::UlinkBusPort();
+		delete m_bus;
 		return S_OK;
 	}

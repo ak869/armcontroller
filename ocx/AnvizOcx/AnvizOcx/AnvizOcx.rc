@@ -36,7 +36,6 @@ IDR_AMJ03               REGISTRY                "AMJ03.rgs"
 IDR_DOORGROUP           REGISTRY                "DoorGroup.rgs"
 IDR_TIMELIST            REGISTRY                "TimeList.rgs"
 IDR_TIMELISTS           REGISTRY                "TimeLists.rgs"
-IDR_CDOORGROUPS         REGISTRY                "CDoorGroups.rgs"
 IDR_DOORGROUPS          REGISTRY                "DoorGroups.rgs"
 IDR_DOORSTATES          REGISTRY                "DoorStates.rgs"
 IDR_DOORSTATE           REGISTRY                "DoorState1.rgs"
@@ -45,6 +44,7 @@ IDR_USERS               REGISTRY                "Users.rgs"
 IDR_DEVICELOG           REGISTRY                "DeviceLog.rgs"
 IDR_DEVICELOGS          REGISTRY                "DeviceLogs.rgs"
 IDR_BUSPORTDATA         REGISTRY                "BusPortData.rgs"
+IDR_BUSPORTDATA1        REGISTRY                "busportd.bin"
 
 /////////////////////////////////////////////////////////////////////////////
 //

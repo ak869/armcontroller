@@ -2,16 +2,16 @@ HKCR
 {
 	AnvizOcx.BusPortData.1 = s 'BusPortData Class'
 	{
-		CLSID = s '{903CD9C7-2FE2-4F2C-8768-5786702B9F55}'
+		CLSID = s '{5CBCB977-4494-4760-87E3-DE8E0745A53B}'
 	}
 	AnvizOcx.BusPortData = s 'BusPortData Class'
 	{
-		CLSID = s '{903CD9C7-2FE2-4F2C-8768-5786702B9F55}'
+		CLSID = s '{5CBCB977-4494-4760-87E3-DE8E0745A53B}'
 		CurVer = s 'AnvizOcx.BusPortData.1'
 	}
 	NoRemove CLSID
 	{
-		ForceRemove {903CD9C7-2FE2-4F2C-8768-5786702B9F55} = s 'BusPortData Class'
+		ForceRemove {5CBCB977-4494-4760-87E3-DE8E0745A53B} = s 'BusPortData Class'
 		{
 			ProgID = s 'AnvizOcx.BusPortData.1'
 			VersionIndependentProgID = s 'AnvizOcx.BusPortData'

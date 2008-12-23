@@ -157,7 +157,8 @@ BOOL CController::GetLongData( WORD pa, WORD ba, BYTE *Buf, DWORD nSize)
 	
 	try
 	{
-		m_port->SendData((CProtocol *)p, 1000, NULL);
+		if( !m_port->SendData(p, 1000, NULL ) )
+			throw m_port->GetErrCode();
 
 		if( p->m_P4 != 0 )
 		{
@@ -200,7 +201,8 @@ BOOL CController::SetByteData(WORD pa, WORD ba, BYTE Buf)
 
 	try
 	{
-		m_port->SendData(p, 1000, NULL);
+		if( !m_port->SendData(p, 1000, NULL ) )
+			throw m_port->GetErrCode();
 
 		if( p->m_P4 != 0 )
 		{
@@ -239,7 +241,8 @@ BOOL CController::SetBitData( WORD pa, WORD ba, BYTE Bit, BYTE nBits )
 
 	try
 	{
-		m_port->SendData(p, 1000, NULL );
+		if( !m_port->SendData(p, 1000, NULL ) )
+			throw m_port->GetErrCode();
 
 		if( p->m_P4 != 0 )
 		{
@@ -277,7 +280,8 @@ BOOL CController::SetLongData(WORD pa, WORD ba, BYTE *Buf, DWORD nSize)
 	p->m_dataSize = nSize;
 	try
 	{
-		m_port->SendData(p, 1000, NULL);
+		if( !m_port->SendData(p, 1000, NULL ) )
+			throw m_port->GetErrCode();
 
 		if( p->m_P4 != 0 )
 		{
@@ -320,7 +324,8 @@ BOOL CController::SetStatus(BYTE node, BYTE opertion)
 	p->m_addr = m_addr;
 	try
 	{
-		m_port->SendData(p, 1000, NULL);
+		if( !m_port->SendData(p, 1000, NULL ) )
+			throw m_port->GetErrCode();
 		if( p->m_P4 != 0 )
 		{
 			throw (DWORD)p->m_P4;
@@ -351,7 +356,8 @@ BOOL CController::GetStatus(BYTE node, BYTE *state)
 
 	try
 	{
-		m_port->SendData(p, 1000, NULL);
+		if( !m_port->SendData(p, 1000, NULL ) )
+			throw m_port->GetErrCode();
 
 		if( p->m_P4 != 0 )
 		{
@@ -411,7 +417,8 @@ BOOL CController::User_Add(DWORD nID, BYTE *nGroup, int nSize, BYTE attrib)
 	p->m_dataSize = 1 + 4 + i;
 	try
 	{
-		m_port->SendData(p, 1000, NULL);
+		if( !m_port->SendData(p, 1000, NULL ) )
+			throw m_port->GetErrCode();
 
 		if( p->m_P4 != 0 )
 		{
@@ -448,7 +455,8 @@ BOOL CController::User_Del(DWORD nID)
 
 	try
 	{
-		m_port->SendData(p, 1000, NULL);
+		if( !m_port->SendData(p, 1000, NULL ) )
+			throw m_port->GetErrCode();
 
 		if( p->m_P4 != 0 )
 		{
@@ -492,6 +500,6 @@ ULONG CController::InRelease()
 	}
 void CController::UlinkBusPort()
 	{
- //		delete m_port;
+// 		delete m_port;
 		m_port = NULL;
 	}

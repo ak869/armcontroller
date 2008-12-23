@@ -143,12 +143,11 @@ public:
 					if( Value.pdispVal == NULL )
 						return E_FAIL;
 					LPDISPATCH lpdis = Value.pdispVal;
-
 					lpdis->QueryInterface(__uuidof(IDevice), (void**)&lpDev);
 					if( lpDev == NULL )
 						return E_FAIL;
 					lpDev->LinkBus(m_parent);
-//					lpDev->Release();
+//					lpdis->Release();
 				}
 				break;
 			case VT_UNKNOWN:
@@ -160,7 +159,7 @@ public:
 					if( lpDev == NULL )
 						return E_FAIL;
 					lpDev->LinkBus(m_parent);
-//					lpDev->Release();
+//					lpunk->Release();
 				}
 				break;
 			case (VT_BYREF|VT_UNKNOWN):
@@ -175,6 +174,7 @@ public:
 						return E_FAIL;
 					lpDev->LinkBus(m_parent);
 					lpunk->Release();
+					*(Value.ppunkVal) = NULL;
 				}
 				break;
 			case (VT_BYREF|VT_DISPATCH):
@@ -191,6 +191,7 @@ public:
 					//m_parent
 					lpDev->LinkBus(m_parent);
 					lpdis->Release();
+					*(Value.ppdispVal) = NULL;
 				}
 				break;
 			default:

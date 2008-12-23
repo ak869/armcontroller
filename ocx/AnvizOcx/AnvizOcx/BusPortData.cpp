@@ -6,33 +6,29 @@
 
 // CBusPortData
 
+// CBusPortData
+
 STDMETHODIMP CBusPortData::get_Buffer(LONG* pVal)
 	{
 		if( pVal == NULL )
 			return E_POINTER;
-		*pVal = (LONG)m_Buffer;
+		*pVal = (LONG)GetBuffer();
 		return S_OK;
 	}
 STDMETHODIMP CBusPortData::get_Size(LONG* pVal)
 	{
 		if( pVal == NULL )
 			return E_POINTER;
-		*pVal = m_nSize;
+		*pVal = GetBufferSize();
 		return S_OK;
 	}
 
-STDMETHODIMP CBusPortData::SetBuffer(LONG * buf, LONG nSize)
+STDMETHODIMP CBusPortData::SetBuffer(LONG Buf, LONG nSize)
 	{
-		if( buf == NULL )
+		if( Buf == NULL )
 			return E_POINTER;
-		if( m_nSize < nSize )
-		{
-			if( m_Buffer != NULL )
-				delete m_Buffer;
-			m_Buffer = new BYTE[nSize];
-		}
-		CopyMemory(m_Buffer, (BYTE *)buf, nSize);
-		m_nSize = nSize;
+		if( !SetBuffer((BYTE *)Buf, (int)nSize) )
+			return E_FAIL;		
 		return S_OK;
 	}
 STDMETHODIMP CBusPortData::get_Param(LONG id, LONG * pVal)

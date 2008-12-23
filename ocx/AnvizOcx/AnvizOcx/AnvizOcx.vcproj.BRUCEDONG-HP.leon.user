@@ -9,7 +9,7 @@
 			Name="Debug|Win32"
 			>
 			<DebugSettings
-				Command=""
+				Command="d:\leon\My Documents\Visual Studio 2008\Projects\test\Project1.exe"
 				WorkingDirectory=""
 				CommandArguments=""
 				Attach="false"

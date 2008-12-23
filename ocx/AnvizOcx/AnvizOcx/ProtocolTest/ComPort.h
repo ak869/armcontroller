@@ -16,6 +16,7 @@ private:
 	HANDLE m_hCom;
 	DWORD m_ErrCode;
 public:
+	BOOL OpenCom(TCHAR *port, LONG baundrate);
 	VOID SetTimeOut(DWORD RecvTimeOut);
 	void ClearData(BYTE *Buffer, DWORD *nSize);
 	DWORD GetErrCode(void);

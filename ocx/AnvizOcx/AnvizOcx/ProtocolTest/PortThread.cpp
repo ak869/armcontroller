@@ -11,7 +11,7 @@
 #define MAX_QUEQUE_SIZE	3
 CPortThread::CPortThread()
 {
-	m_qs = new CQueue<CQParam>(MAX_QUEQUE_SIZE);
+	m_qs = new CQueue<CBusData *>(MAX_QUEQUE_SIZE);
 //	m_qr = new CQueque(MAX_QUEQUE_SIZE);
 	m_port = new CComPort();
 	m_Event[0] = m_qs->m_EvNoEmpty;
@@ -40,9 +40,8 @@ DWORD CPortThread::Run(LPVOID lparam)
 		switch( ret - WAIT_OBJECT_0 )
 		{
 		case 0:			
-			m_qs->OutQueue((CQParam **)&p);
-		
-			m_port->SetTimeOut( (DWORD)p->GetParam(TIMEOUT_ID) );
+			m_qs->OutQueue( &p);
+			m_port->SetTimeOut( (DWORD)( p->GetParam(TIMEOUT_ID) ) );
 //			p->SetSendTime();
 			m_port->WriteData(p->GetBuffer(), p->GetBufferSize());
 			nBytes = sizeof(buf);			
@@ -50,7 +49,7 @@ DWORD CPortThread::Run(LPVOID lparam)
 			p->SetBuffer(buf, nBytes);
 			if( p->GetBufferSize() == 0 )
 				p->SetParam(ERRCODE_ID, (void *)ERR_TIMEOUT);
-			p->SetParam(EVENT_ID,NULL);
+			p->SetParam(SETEVENT_ID,NULL);
 			break;
 		case 1:
 			return 0;
@@ -208,16 +207,16 @@ BOOL CPortThread::WriteData(BYTE *oBuf, DWORD oSize)
 	return WriteData(oBuf, oSize, 1000, NULL);
 }
 
-BOOL CPortThread::WriteData(CPortDataParam *p)
+BOOL CPortThread::WriteData(CBusData *p)
 {
-//	CPortDataParam *p = new CPortDataParam(oBuf, oSize, nTimeOut, lparam);
+
 	if( m_qs->InQueue(p) )
 		return TRUE;
 	m_ErrCode = m_qs->GetErrCode();
 	return	TRUE;
 }
 
-BOOL CPortThread::ReadData(CPortDataParam **p)
+BOOL CPortThread::ReadData(CBusData **p)
 {
 /*	WaitForSingleObject(m_qr->m_EvNoEmpty, INFINITE);
 	m_qr->OutQueque((CQParam **)p);
@@ -274,13 +273,7 @@ VOID CPortDataParam::SetSendTime(VOID)
 {
 	m_stime = GetTickCount();
  }
-BOOL CPortThread::SendData(CBusData * pVal)
-{
-	if( m_qs->InQueue((CQParam*)pVal) )
-		return TRUE;
-	m_ErrCode = m_qs->GetErrCode();
-	return FALSE;
-}
+
 DWORD CPortDataParam::GetBufferSize()
 {
 	return m_nSize;
@@ -350,26 +343,48 @@ BOOL CPortDataParam::SetBuffer(BYTE *Buffer, int nSize)
 	m_nSize = 0;
 	return FALSE;
 }
-
-VOID CPortThread::SendData(CProtocol *p, DWORD nTimeOut, LPVOID lParam)//throw (...)
+BOOL CBusPortThread::SendData(CBusData * pVal)
+{
+	return WriteData(pVal);
+}
+BOOL CBusPortThread::SendData(CProtocol *p, DWORD nTimeOut, LPVOID lParam)
 {
 	HANDLE e;
-	CPortDataParam *t = new CPortDataParam(p, nTimeOut, lParam);
-	if( !t->GetBufferSize() )
-	{
-		throw t->GetErrCode();		
+	CPortDataParam *t = NULL;
+	m_ErrCode = 0;
+	try
+	{		
+		t = new CPortDataParam(p, nTimeOut, lParam);
+		if( !t->GetBufferSize() )
+		{
+			throw t->GetErrCode();	
+		}
+		e = t->UseEvent();
+		
+		if( !SendData((CBusData*)t) )
+		{
+			throw CPortThread::GetErrCode();
+		}
+
+		WaitForSingleObject(e, INFINITE);
+		if( t->GetErrCode() )
+			throw t->GetErrCode();
+
+		if( !p->GetBuffer((CBusData *)t) )
+			throw p->GetErrCode();
 	}
-	e = t->UseEvent();
-	
-	if( !SendData((CBusData*)t) )
-		throw m_ErrCode;
+	catch(DWORD err)
+	{
+		m_ErrCode = err;
+	}
+	if( t )
+		delete t;
+	if( m_ErrCode )
+		return FALSE;
+	return TRUE;
+}
 
-	WaitForSingleObject(e, INFINITE);
-	if( t->GetErrCode() )
-		throw t->GetErrCode();
-
-	if( !p->GetBuffer((CBusData *)t) )
-		throw p->GetErrCode();
-	delete t;
-	return;
+BOOL CPortThread::OpenPort(TCHAR *port, LONG baundrate)
+{
+	return m_port->OpenCom(port, baundrate);
 }

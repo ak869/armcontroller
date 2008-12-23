@@ -9,42 +9,63 @@
 #pragma once
 #endif // _MSC_VER > 1000
 #include "PortThread.h"
-/*
-class CErrCode
-{
-private:
-	DWORD	m_ErrCode;
-
-}
-*/
 
 #define OTHER_PAGE			0
 #define OTHER_SIZE			48
-#define OTHER_NUMBER		8
+#define OTHER_NUMBER		7
 
-#define ATTRIB_PAGE			1
-#define ATTRIB_SIZE			8
-#define ATTRIB_NUMBER		2
+/*
+	0 - 63		PAGE(1)
+	64 - 127	PAGE(2)
 
-#define DOOR_STATE_PAGE		2
+*/
+
+#define DOOR_STATE_PAGE		1
 #define DOOR_STATE_SIZE		8
-#define DOOR_STATE_NUMBER	256
+#define DOOR_STATE_NUMBER	128
 
-#define GROUP_PAGE			8
+/*
+	0 - 13			PAGE(3)		ba:504 attrib
+	14 - 27 		PAGE(4)		ba:504 attrib
+	28 - 41			PAGE(5)		ba:504 attrib
+	42 - 55			PAGE(6)		ba:504 attrib
+	56 - 69			PAGE(7)		ba:504 attrib
+	70 - 83			PAGE(8)		ba:504 attrib
+	84 - 97			PAGE(9)		ba:504 attrib
+	98 - 111		PAGE(10)	ba:504 attrib
+	112 - 125		PAGE(11)	ba:504 attrib
+	126 - 139		PAGE(12)	ba:504 attrib
+	140 - 153		PAGE(13)	ba:504 attrib
+	154 - 167		PAGE(14)	ba:504 attrib
+	168 - 181		PAGE(15)	ba:504 attrib
+	182 - 195		PAGE(16)	ba:504 attrib
+	196 - 209		PAGE(17)	ba:504 attrib
+	210 - 223		PAGE(18)	ba:504 attrib
+*/
+
+#define GROUP_PAGE			3
 #define GROUP_SIZE			36
-#define GROUP_NUMBER		64
+#define GROUP_NUMBER		(16 * 14)
 #define GROUP_TIMELIST_NUM	8
 
-#define DOOR_GROUP_PAGE	14
-#define DOOR_GROUP_SIZE	17
 
-
-#define USER_ID_PAGE		15
+// 4000 * 4 / 528 = 30.30 ~ 31
+#define USER_ID_PAGE		19
 #define USER_ID_SIZE		4
+#define USER_ID_NUMBER		4000
+
+// 60.60 ~ 61
+#define USER_GROUP_PAGE		50
+#define USER_GROUP_SIZE		8
+
+// 15.15 ~ 16
+#define USER_INFO_PAGE		121
+#define USER_INFO_SIZE		2
+
+#define LOG_PAGE			137
+#define LOG_SIZE			16
 
 
-#define USER_INFO_PAGE		75
-#define USER_INFO_SIZE		8
 #define uint32	unsigned int
 #define uint16	unsigned short
 #define uint8	unsigned char
@@ -114,8 +135,6 @@ struct tag_doorstatus{
 	uint8 crc;
 };//8
 
-#define DOOR_STATUS_SIZE	8
-#define DOOR_STATUS_NUMBER	256
 
 struct tag_group
 {
@@ -124,6 +143,7 @@ struct tag_group
 	uint8 power;
 	uint8 crc;
 };//36
+
 #define GROUP_SIZE		36
 #define GROUP_NUBMER	48
 
@@ -172,7 +192,7 @@ public:
 	}
 };
 */
-class CController:public CMachine 
+class CController:public CDevice
 {
 private:
 	BYTE m_addr;

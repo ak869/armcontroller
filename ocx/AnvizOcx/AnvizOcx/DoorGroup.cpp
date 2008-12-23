@@ -52,8 +52,8 @@ STDMETHODIMP CDoorGroup::Updata(void)
 			return E_INVALIDARG;
 		}
 
-		if( !m_parent->SetLongData( DOOR_GROUP_PAGE + (m_id / 14), (m_id % 14),
-			 (BYTE *)m_group, DOOR_GROUP_SIZE ) )
+		if( !m_parent->SetLongData( GROUP_PAGE + (m_id / 14), (m_id % 14),
+			 (BYTE *)m_group, GROUP_SIZE - 1 ) )
 		{			
 			return S_FALSE;	
 		}
@@ -67,8 +67,8 @@ STDMETHODIMP CDoorGroup::Download(void)
 		{
 			return E_INVALIDARG;
 		}
-		if( !m_parent->GetLongData( DOOR_GROUP_PAGE + (m_id / 14), (m_id % 14),
-			 (BYTE *)m_group, DOOR_GROUP_SIZE ) )
+		if( !m_parent->GetLongData( GROUP_PAGE + (m_id / 14), (m_id % 14),
+			 (BYTE *)m_group, GROUP_SIZE ) )
 		{
 			
 			return S_FALSE;	

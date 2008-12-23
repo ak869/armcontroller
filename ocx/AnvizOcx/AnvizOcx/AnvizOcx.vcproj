@@ -518,11 +518,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\BusPortData.rgs"
+				RelativePath=".\busportd.bin"
 				>
 			</File>
 			<File
-				RelativePath=".\CDoorGroups.rgs"
+				RelativePath=".\BusPortData.rgs"
 				>
 			</File>
 			<File
@@ -611,7 +611,7 @@
 			>
 		</File>
 		<File
-			RelativePath=".\ClassDiagram2.cd"
+			RelativePath=".\ClassDiagram11.cd"
 			>
 		</File>
 		<File

@@ -19,7 +19,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
  	// TODO: Place code here.
 	BYTE *t;
 	char disp[128];
-	CPortThread pt;
+	CBusPortThread pt;
 	CController ct;
 	BYTE group[6];
 	BYTE buf[528];
