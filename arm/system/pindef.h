@@ -5,8 +5,8 @@
 
 #define PIN_MEGNET1_BIT		21
 #define PIN_EXIT1_BIT		16
-#define PIN_MEGNET2_BIT		6
-#define PIN_EXIT2_BIT		7
+#define PIN_MEGNET2_BIT		25
+#define PIN_EXIT2_BIT		25
 
 #define PIN_MSCK_BIT		17
 #define PIN_MISO_BIT		18

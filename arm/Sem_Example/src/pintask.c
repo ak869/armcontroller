@@ -4,100 +4,53 @@ extern uint8	msgBuf[128];
 
 static struct tag_inpin
 {
-	uint16	megnet_state	: 	3;
-	uint16	megnet			:	1;
-	uint16	exit_state 		:	3;
-	uint16	exit			:	1;
-	uint16  alarm_state		:	3;
-	uint16  alarm			:	1;	
-	uint16	other_state		:	3;
-	uint16	other			:	1;	
-}pin[LOCAL_DOORS];
+	uint8	state	: 	3;
+	uint32  bit		:	5;		
+}pin[LOCAL_DOORS][IN_NODES] = {{{0,PIN_MEGNET1_BIT},{0,PIN_EXIT1_BIT}}};//,{0,PIN_MEGNET1_BIT},{0,PIN_MEGNET1_BIT},
+
 
 
 void InputPinTask( void *pdata)
 {
 	uint32 pin_state,pin_prev_state, t;
 	uint8 mbuf[2];
+	int i,j;
 	struct tag_nodemsg *msg;
 	msg = (struct tag_nodemsg *)mbuf;	
 	msg->size = 2;
+
 	pdata = pdata;
 	pin_prev_state = pin_state = IOPIN;	
 	while(1)
 	{	
-		OSTimeDly(2);
+		OSTimeDly(4);//20ms
 		
 		pin_state = IOPIN;
 		t = (pin_state ^ pin_prev_state);
-		if( t & PIN_IN_MASK )
+		for( i = 0; i < LOCAL_DOORS; i++ )
 		{
-			if( PIN_MEGNET1 & t )
+			for( j = 0; i < IN_NODES; j++)
 			{
-				pin[0].megnet_state = 0;
-				pin[0].megnet = (pin_state >> PIN_MEGNET1_BIT);
-			}
-			if( PIN_MEGNET2 & t )
-			{
-				pin[1].megnet_state = 0;
-				pin[1].megnet = (pin_state >> PIN_MEGNET2_BIT);
-			}
-			if( PIN_EXIT1 & t )
-			{
-				pin[0].exit_state = 0;
-				pin[0].exit = (pin_state >> PIN_EXIT1_BIT);
-			}
-			if( PIN_EXIT2 & t )
-			{
-				pin[1].exit_state = 0;
-				pin[1].exit = (pin_state >> PIN_EXIT2_BIT);
-			}
-		}	
-		
-		
-		if( pin[0].megnet_state < 2 )
-		{
-			pin[0].megnet_state++;
-		}else if( pin[0].megnet_state == 2)
-		{
+				if( t & (1 << pin[i][j].bit) )
+				{
+					pin[i][j].state = 0;			
+				}else
+				{
+					if( pin[i][j].state < 2 )
+						pin[i][j].state++;
+					else if( pin[i][j].state == 2 )
+					{
+						msg->node = (j + (i << 3));
+						msg->msg = (pin_state >> pin[i][j].bit) & 0x1;
+						if( NMsgQWrite(msgBuf, msg) == QUEUE_OK )
+							pin[i][j].state = 3;						
+					}
+				}
 			
-			msg->node = (MEGNET_NODE + READERDOOR1);
-			msg->msg = pin[0].megnet;
-			if( NMsgQWrite(msgBuf, msg) == QUEUE_OK )
-				pin[0].megnet_state = 3;
-		}
+			}
 		
-		if( pin[1].megnet_state < 2 )
-			pin[1].megnet_state++;
-		else if( pin[1].megnet_state == 2)
-		{			
-			msg->node = (MEGNET_NODE + READERDOOR2);
-			msg->msg = pin[1].megnet;
-			if( NMsgQWrite(msgBuf, msg) == QUEUE_OK )
-				pin[1].megnet_state = 3;
-		}			
-			
-		if( pin[0].exit_state < 2 )
-			pin[0].exit_state++;
-		else if( pin[0].exit_state == 2)
-		{			
-			msg->node = (EXIT_NODE + READERDOOR1);
-			msg->msg = pin[0].exit;
-			if( NMsgQWrite(msgBuf, msg) == QUEUE_OK )
-				pin[0].exit_state = 3;
 		}
-					
-		if( pin[1].exit_state < 2 )
-			pin[1].exit_state++;
-		else if( pin[1].exit_state == 2)
-		{
-			pin[1].exit_state = 3;
-			msg->node = (MEGNET_NODE + READERDOOR2);
-			msg->msg = pin[1].exit;
-			if( NMsgQWrite(msgBuf, msg) == QUEUE_OK )
-				pin[1].exit_state = 3;
-
-		}	
+		pin_prev_state = pin_state;
 		
 	}
 

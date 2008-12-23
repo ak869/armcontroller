@@ -196,4 +196,5 @@ struct tag_attrib{
 };//5
 void LogInit(void);
 void LogWrite(uint8 node, uint8 type, uint32 userid, uint32 ntime);
+void FsInit(void);
 #endif

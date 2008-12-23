@@ -1,13 +1,19 @@
 #ifndef _SYSTEM_DEF_H
 #define _SYSTEM_DEF_H
 
-#define DOOR_NODE			0
-#define MEGNET_NODE			1
-#define EXIT_NODE			2
-#define	CTRL_NODE			3
+
+
+
+#define MEGNET_NODE			0
+#define EXIT_NODE			1
+#define OTHER_NODE			2
+#define ALARM_NODE			3
 #define READERDATA_NODE		4
-#define ALARM_NODE			5
-#define OTHER_NODE			6
+#define DOOR_NODE			5
+#define	CTRL_NODE			6
+
+#define IN_NODES			2
+
 
 #define READERDOOR1				0x00
 #define READERDOOR2				0x08
@@ -26,7 +32,7 @@
 #define READERDOOR15			0x70 
 #define READERDOOR16			0x78
 
-#define LOCAL_DOORS				2
+#define LOCAL_DOORS				1
 #define FULL_DOORS				16
 
 

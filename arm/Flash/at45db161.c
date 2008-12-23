@@ -425,7 +425,35 @@ void at45db_BlockErase(uint16 pa)
 	return;
 
 }
+void at45db_ChipErase(void)
+{
+	int i;
+	uint8 t;
+	FlashStart();
+	while( (at45db_Status_reg_read() & 0x80) == 0 ) OSTimeDly(2);
+	SSPStart();	
+	IOCLR = MCS;
+	
+	SSPDR = 0xC7;
+	SSPDR = 0x94;//PA6	
+	SSPDR = 0x80;//BA8
+	SSPDR = 0x9a;//BA0
 
+	t = SSPSR;
+	while( !(t & SSP_TX_FIFO_EMPTY ) ) t = SSPSR;
+	
+	i = 4;	
+	do{
+		t = SSPDR;
+		i--;
+	}while( i );		
+	IOSET = MCS;			
+	SSPEnd();
+	for( i = 0; i < 8; i++);
+	FlashEnd();
+	return;
+
+}
 void at45db_BufferWrite_PageProg(int id, uint16 pa,uint16 ba,uint8* buf, int nSize)
 {
 	int j;

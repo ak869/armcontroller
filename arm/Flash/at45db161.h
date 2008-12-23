@@ -14,7 +14,7 @@ union tag_flashaddr
 	uint32 addr;
 	uint8 value[4];
 };
-
+void at45db_ChipErase(void);
 void at45db_BlockErase(uint16 pa);
 void at45db_PageErase(uint16 pa);
 void at45db_BufferWrite_PageProg(int id, uint16 pa,uint16 ba,uint8* buf, int nSize);
