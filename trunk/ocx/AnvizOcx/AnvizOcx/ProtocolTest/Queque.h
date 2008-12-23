@@ -11,22 +11,12 @@
 #define ERR_FULL	1
 #define ERR_EMPTY	2
 
-class CQParam
-{
 
-public:
-	CQParam()
-	{ return; }
-	virtual ~CQParam()
-	{return;}
-	virtual ULONG Release(VOID) = 0;
-	
-};
 template <class QData>
 class CQueue  
 {
 private:
-	QData **m_queue;
+	QData *m_queue;
 	int m_in,m_out;
 	int m_Size;
 	int m_ErrCode;
@@ -43,7 +33,6 @@ public:
 		EnterCriticalSection(&m_section);
 		while( m_in != m_out )
 		{
-			m_queue[m_out]->Release();
 			m_queue[m_out] = NULL;
 			m_out++;
 			m_out %= m_Size;
@@ -75,7 +64,7 @@ public:
 		LeaveCriticalSection(&m_section);
 		return ret;	
 	}
-	BOOL OutQueue(QData **lparam)
+	BOOL OutQueue(QData *lparam)
 	{
 		m_ErrCode = 0;
 		if( IsEmpty() )
@@ -87,12 +76,12 @@ public:
 		*lparam = m_queue[m_out];
 		m_out++;
 		m_out %= m_Size;
+		LeaveCriticalSection(&m_section);
 		if( IsEmpty() )
 			ResetEvent(m_EvNoEmpty);
-		LeaveCriticalSection(&m_section);
 		return TRUE;	
 	}
-	BOOL InQueue(QData *lparam)
+	BOOL InQueue(QData lparam)
 	{
 		m_ErrCode = 0;
 		if( IsFull() )
@@ -110,7 +99,7 @@ public:
 	}
 	CQueue(int nSize)
 	{
-		m_queue = (QData **) LocalAlloc(LPTR, sizeof(LPVOID) * (nSize + 1) );
+		m_queue =  new QData[nSize + 1];
 		InitializeCriticalSection(&m_section);
 		m_EvNoEmpty =  CreateEvent(NULL, TRUE, FALSE, NULL);
 		m_in = 0;
@@ -121,7 +110,7 @@ public:
 	virtual ~CQueue()
 	{
 		Clear();
-		LocalFree(m_queue);
+		delete [] m_queue;
 		CloseHandle(m_EvNoEmpty);
 		DeleteCriticalSection(&m_section);	
 	}

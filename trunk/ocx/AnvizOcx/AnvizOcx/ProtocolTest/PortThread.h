@@ -14,8 +14,11 @@
 
 #define TIMEOUT_ID	0
 #define LPARAM_ID	1
-#define EVENT_ID	2
+#define SETEVENT_ID	2
 #define ERRCODE_ID	3
+#define EVENT_ID	4
+#define PARENT_ID	5
+#define HWND_ID		6
 
 class CPortDataParam;
 
@@ -24,8 +27,9 @@ class CPortDataParam;
 
 #define MAX_PACKSIZE	256
 
+
+
 class CPortThread  : 
-	public CBusProtocol,
 	public CThread, 
 	public CPort  
 {
@@ -33,14 +37,15 @@ class CPortThread  :
 private:
 	DWORD	m_ErrCode;
 	CComPort *m_port;
-	CQueue<CQParam> *m_qs;//,*m_qr;
+	CQueue<CBusData *> *m_qs;//,*m_qr;
 	HANDLE m_Event[2];
 	VOID *m_portAttrib;
 public:	
-	virtual VOID SendData(CProtocol *p, DWORD nTimeOut, LPVOID lParam);
+	BOOL OpenPort(TCHAR *port, LONG baundrate);
+
 	BOOL CreateThread(VOID);
-	BOOL ReadData(CPortDataParam **p);
-	BOOL WriteData(CPortDataParam *p );
+	BOOL ReadData(CBusData **p);
+	BOOL WriteData(CBusData *p );
 	BOOL WriteData(BYTE *oBuf, DWORD oSize, DWORD nTimeOut,LPVOID lparam);
 	BOOL WriteData(BYTE *oBuf, DWORD oSize);
 	virtual DWORD GetErrCode(VOID);
@@ -57,13 +62,31 @@ public:
 	DWORD Run(LPVOID lparam);
 	CPortThread();
 	virtual ~CPortThread();
-
-
-	BOOL SendData(CBusData * pVal);
 	};
 
-class CPortDataParam: 
-	public CQParam,
+class CBusPortThread : 
+	public CBusProtocol,
+	public CPortThread
+{
+private:
+	DWORD m_ErrCode;
+public:
+	CBusPortThread()
+	{
+		m_ErrCode = 0;
+	}
+	virtual ~CBusPortThread()
+	{
+	
+	}
+	virtual DWORD GetErrCode()
+	{
+		return m_ErrCode;
+	}
+	virtual BOOL SendData(CProtocol *p, DWORD nTimeOut, LPVOID lParam);
+	virtual BOOL SendData(CBusData * pVal);
+};
+class CPortDataParam:
 	public CBusData
 {
 /*

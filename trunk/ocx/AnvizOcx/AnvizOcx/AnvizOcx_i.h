@@ -4,7 +4,7 @@
 
 
  /* File created by MIDL compiler version 7.00.0500 */
-/* at Tue Dec 23 16:10:05 2008
+/* at Sun Dec 21 15:38:15 2008
  */
 /* Compiler settings for .\AnvizOcx.idl:
     Oicf, W1, Zp8, env=Win32 (32b run)
@@ -926,8 +926,24 @@ EXTERN_C const IID IID_IComBus;
     IComBus : public IDispatch
     {
     public:
-        virtual /* [helpstring][id][propget] */ HRESULT STDMETHODCALLTYPE get_MachineItem( 
+        virtual /* [helpstring][id][propget] */ HRESULT STDMETHODCALLTYPE get_DeviceItems( 
             /* [retval][out] */ IAnvizItems **pVal) = 0;
+        
+        virtual /* [helpstring][id][propget] */ HRESULT STDMETHODCALLTYPE get_Port( 
+            /* [retval][out] */ BSTR *pVal) = 0;
+        
+        virtual /* [helpstring][id][propput] */ HRESULT STDMETHODCALLTYPE put_Port( 
+            /* [in] */ BSTR newVal) = 0;
+        
+        virtual /* [helpstring][id][propget] */ HRESULT STDMETHODCALLTYPE get_BaudRate( 
+            /* [retval][out] */ LONG *pVal) = 0;
+        
+        virtual /* [helpstring][id][propput] */ HRESULT STDMETHODCALLTYPE put_BaudRate( 
+            /* [in] */ LONG newVal) = 0;
+        
+        virtual /* [helpstring][id] */ HRESULT STDMETHODCALLTYPE Start( void) = 0;
+        
+        virtual /* [helpstring][id] */ HRESULT STDMETHODCALLTYPE Stop( void) = 0;
         
     };
     
@@ -978,9 +994,31 @@ EXTERN_C const IID IID_IComBus;
             /* [out] */ EXCEPINFO *pExcepInfo,
             /* [out] */ UINT *puArgErr);
         
-        /* [helpstring][id][propget] */ HRESULT ( STDMETHODCALLTYPE *get_MachineItem )( 
+        /* [helpstring][id][propget] */ HRESULT ( STDMETHODCALLTYPE *get_DeviceItems )( 
             IComBus * This,
             /* [retval][out] */ IAnvizItems **pVal);
+        
+        /* [helpstring][id][propget] */ HRESULT ( STDMETHODCALLTYPE *get_Port )( 
+            IComBus * This,
+            /* [retval][out] */ BSTR *pVal);
+        
+        /* [helpstring][id][propput] */ HRESULT ( STDMETHODCALLTYPE *put_Port )( 
+            IComBus * This,
+            /* [in] */ BSTR newVal);
+        
+        /* [helpstring][id][propget] */ HRESULT ( STDMETHODCALLTYPE *get_BaudRate )( 
+            IComBus * This,
+            /* [retval][out] */ LONG *pVal);
+        
+        /* [helpstring][id][propput] */ HRESULT ( STDMETHODCALLTYPE *put_BaudRate )( 
+            IComBus * This,
+            /* [in] */ LONG newVal);
+        
+        /* [helpstring][id] */ HRESULT ( STDMETHODCALLTYPE *Start )( 
+            IComBus * This);
+        
+        /* [helpstring][id] */ HRESULT ( STDMETHODCALLTYPE *Stop )( 
+            IComBus * This);
         
         END_INTERFACE
     } IComBusVtbl;
@@ -1018,8 +1056,26 @@ EXTERN_C const IID IID_IComBus;
     ( (This)->lpVtbl -> Invoke(This,dispIdMember,riid,lcid,wFlags,pDispParams,pVarResult,pExcepInfo,puArgErr) ) 
 
 
-#define IComBus_get_MachineItem(This,pVal)	\
-    ( (This)->lpVtbl -> get_MachineItem(This,pVal) ) 
+#define IComBus_get_DeviceItems(This,pVal)	\
+    ( (This)->lpVtbl -> get_DeviceItems(This,pVal) ) 
+
+#define IComBus_get_Port(This,pVal)	\
+    ( (This)->lpVtbl -> get_Port(This,pVal) ) 
+
+#define IComBus_put_Port(This,newVal)	\
+    ( (This)->lpVtbl -> put_Port(This,newVal) ) 
+
+#define IComBus_get_BaudRate(This,pVal)	\
+    ( (This)->lpVtbl -> get_BaudRate(This,pVal) ) 
+
+#define IComBus_put_BaudRate(This,newVal)	\
+    ( (This)->lpVtbl -> put_BaudRate(This,newVal) ) 
+
+#define IComBus_Start(This)	\
+    ( (This)->lpVtbl -> Start(This) ) 
+
+#define IComBus_Stop(This)	\
+    ( (This)->lpVtbl -> Stop(This) ) 
 
 #endif /* COBJMACROS */
 
@@ -3014,7 +3070,7 @@ EXTERN_C const IID IID_IBusPortData;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("014BA2C5-63D4-469F-8AFD-ECDEF42B8B63")
+    MIDL_INTERFACE("1010BD04-DDD8-44A8-8A5D-FE5DD9CF2634")
     IBusPortData : public IDispatch
     {
     public:
@@ -3025,7 +3081,7 @@ EXTERN_C const IID IID_IBusPortData;
             /* [retval][out] */ LONG *pVal) = 0;
         
         virtual /* [helpstring][id] */ HRESULT STDMETHODCALLTYPE SetBuffer( 
-            /* [in] */ LONG *Buf,
+            /* [in] */ LONG Buf,
             /* [in] */ LONG nSize) = 0;
         
         virtual /* [helpstring][id][propget] */ HRESULT STDMETHODCALLTYPE get_Param( 
@@ -3095,7 +3151,7 @@ EXTERN_C const IID IID_IBusPortData;
         
         /* [helpstring][id] */ HRESULT ( STDMETHODCALLTYPE *SetBuffer )( 
             IBusPortData * This,
-            /* [in] */ LONG *Buf,
+            /* [in] */ LONG Buf,
             /* [in] */ LONG nSize);
         
         /* [helpstring][id][propget] */ HRESULT ( STDMETHODCALLTYPE *get_Param )( 
@@ -3403,12 +3459,17 @@ EXTERN_C const CLSID CLSID_BusPortData;
 
 #ifdef __cplusplus
 
-class DECLSPEC_UUID("903CD9C7-2FE2-4F2C-8768-5786702B9F55")
+class DECLSPEC_UUID("5CBCB977-4494-4760-87E3-DE8E0745A53B")
 BusPortData;
 #endif
 #endif /* __AnvizOcxLib_LIBRARY_DEFINED__ */
 
 /* Additional Prototypes for ALL interfaces */
+
+unsigned long             __RPC_USER  BSTR_UserSize(     unsigned long *, unsigned long            , BSTR * ); 
+unsigned char * __RPC_USER  BSTR_UserMarshal(  unsigned long *, unsigned char *, BSTR * ); 
+unsigned char * __RPC_USER  BSTR_UserUnmarshal(unsigned long *, unsigned char *, BSTR * ); 
+void                      __RPC_USER  BSTR_UserFree(     unsigned long *, BSTR * ); 
 
 unsigned long             __RPC_USER  VARIANT_UserSize(     unsigned long *, unsigned long            , VARIANT * ); 
 unsigned char * __RPC_USER  VARIANT_UserMarshal(  unsigned long *, unsigned char *, VARIANT * ); 

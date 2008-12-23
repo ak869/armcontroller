@@ -1,18 +1,1 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<ClassDiagram MajorVersion="1" MinorVersion="1">
-  <Class Name="CAnviz">
-    <Position X="1" Y="0.5" Width="1.5" />
-    <TypeIdentifier>
-      <HashCode>AIIEgABAAAACAAAAAABAAAAAQAAAAABAAAAAARAAAEA=</HashCode>
-      <FileName>Anviz.h</FileName>
-    </TypeIdentifier>
-  </Class>
-  <Class Name="CAnvizItems">
-    <Position X="3" Y="0.75" Width="1.5" />
-    <TypeIdentifier>
-      <HashCode>AAIQgAAAAABAAAAAAAAABAAAQAAAAABAAAAAAQBAAEA=</HashCode>
-      <FileName>AnvizItems.h</FileName>
-    </TypeIdentifier>
-  </Class>
-  <Font Name="SimSun" Size="9" />
-</ClassDiagram>
+ 

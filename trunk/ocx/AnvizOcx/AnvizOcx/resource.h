@@ -23,6 +23,9 @@
 #define IDR_DATAOBJ                     118
 #define IDR_DATAOBJ1                    120
 #define IDR_BUSPORTDATA                 121
+#define IDR_TESTDATA                    122
+#define IDR_TESTDATA1                   124
+#define IDR_BUSPORTDATA1                126
 
 // Next default values for new objects
 // 
@@ -31,6 +34,6 @@
 #define _APS_NEXT_RESOURCE_VALUE        201
 #define _APS_NEXT_COMMAND_VALUE         32768
 #define _APS_NEXT_CONTROL_VALUE         201
-#define _APS_NEXT_SYMED_VALUE           122
+#define _APS_NEXT_SYMED_VALUE           127
 #endif
 #endif

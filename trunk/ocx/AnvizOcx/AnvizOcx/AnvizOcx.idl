@@ -95,9 +95,14 @@ interface IAnviz : IDispatch{
 	pointer_default(unique)
 ]
 interface IComBus : IDispatch{
-	[propget, id(1), helpstring("property MachineItem")] HRESULT MachineItem([out, retval] IAnvizItems** pVal);
-//	[id(2), helpstring("method SendData"), hidden] HRESULT SendData([in] VARIANT nVal);
-	};
+	[propget, id(1), helpstring("property MachineItem")] HRESULT DeviceItems([out, retval] IAnvizItems** pVal);
+	[propget, id(2), helpstring("property Port")] HRESULT Port([out, retval] BSTR* pVal);
+	[propput, id(2), helpstring("property Port")] HRESULT Port([in] BSTR newVal);
+	[propget, id(3), helpstring("property BaudRate")] HRESULT BaudRate([out, retval] LONG* pVal);
+	[propput, id(3), helpstring("property BaudRate")] HRESULT BaudRate([in] LONG newVal);
+	[id(4), helpstring("method Start")] HRESULT Start(void);
+	[id(5), helpstring("method Stop")] HRESULT Stop(void);
+};
 
 
 [
@@ -288,9 +293,19 @@ interface IAMJ03 : IDispatch{
 	[propget, id(10), helpstring("property Logs")] HRESULT Logs([out, retval] IDeviceLogs** pVal);
 	};
 
+/*
+interface IBusPortData : IDispatch{
+	[propget, id(1), helpstring("property Buffer")] HRESULT Buffer([out, retval] LONG* pVal);
+	[propget, id(2), helpstring("property Size")] HRESULT Size([out, retval] LONG* pVal);
+	[id(3), helpstring("method SetBuffer")] HRESULT SetBuffer([in] LONG Buf, [in] LONG nSize);
+	[propget, id(4), helpstring("property Param")] HRESULT Param([in]LONG id, [out, retval] LONG* pVal);
+	[propput, id(4), helpstring("property Param")] HRESULT Param([in]LONG id, [in] LONG newVal);
+	};
+*/
+
 [
 	object,
-	uuid(014BA2C5-63D4-469F-8AFD-ECDEF42B8B63),
+	uuid(1010BD04-DDD8-44A8-8A5D-FE5DD9CF2634),
 	dual,
 	nonextensible,
 	helpstring("IBusPortData Interface"),
@@ -299,10 +314,10 @@ interface IAMJ03 : IDispatch{
 interface IBusPortData : IDispatch{
 	[propget, id(1), helpstring("property Buffer")] HRESULT Buffer([out, retval] LONG* pVal);
 	[propget, id(2), helpstring("property Size")] HRESULT Size([out, retval] LONG* pVal);
-	[id(3), helpstring("method SetBuffer")] HRESULT SetBuffer([in] LONG* Buf, [in] LONG nSize);
-	[propget, id(4), helpstring("property Param")] HRESULT Param([in]LONG id, [out, retval] LONG* pVal);
-	[propput, id(4), helpstring("property Param")] HRESULT Param([in]LONG id, [in] LONG newVal);
-	};
+	[id(3), helpstring("method SetBuffer")] HRESULT SetBuffer([in] LONG Buf, [in] LONG nSize);
+	[propget, id(4), helpstring("property Param")] HRESULT Param([in] LONG id, [out, retval] LONG* pVal);
+	[propput, id(4), helpstring("property Param")] HRESULT Param([in] LONG id, [in] LONG newVal);
+};
 [
 	uuid(1C19F271-4C93-4F4B-8422-308103ED3887),
 	version(1.0),
@@ -437,10 +452,8 @@ library AnvizOcxLib
 		[default] interface IDeviceLogs;
 	};
 
-
-
 	[
-		uuid(903CD9C7-2FE2-4F2C-8768-5786702B9F55),
+		uuid(5CBCB977-4494-4760-87E3-DE8E0745A53B),
 		helpstring("BusPortData Class")
 	]
 	coclass BusPortData
