@@ -95,61 +95,46 @@ enum e_node
 	test	
 };
 
-#define DOOR_NODE			0
-#define MEGNET_NODE			1
-#define EXIT_NODE			2
-#define	CTRL_NODE			3
-#define READERDATA_NODE		4
-#define ALARM_NODE			5
-#define OTHER_NODE			6
 
-#define READERDOOR1				0x00
-#define READERDOOR2				0x08
-#define READERDOOR3				0x10
-#define READERDOOR4				0x18
-#define READERDOOR5				0x20
-#define READERDOOR6				0x28
-#define READERDOOR7				0x30
-#define READERDOOR8				0x38
-#define READERDOOR9				0x40
-#define READERDOOR10			0x48
-#define READERDOOR11			0x50
-#define READERDOOR12			0x58 
-#define READERDOOR13			0x60 
-#define READERDOOR14			0x68 
-#define READERDOOR15			0x70 
-#define READERDOOR16			0x78
 
   
 
+
 struct tag_timecount
 {
-	uint8 megnet_count:7;
-	uint8 megnet_state:1;
-	uint8 door_count;		// =0 door close, >0 door open
-	uint8 reader_count;
+	uint8 megnet_count;		//time	MEGNET_NODE state
+	uint8 door_count;		//time =0 door close, >0 door open 	DOOR_NODE state
+	uint8 reader_count;		//time								
 	uint8 reader_card;
-}timecount[2];
-
-
+	uint8 other_count;		
+	uint8 ctrl_count;		//
+	uint8 reserved;			
+	uint8 exit_state 	: 1;
+	uint8 alarm_state	: 1;
+	uint8 reader_state	: 1;
+}timecount[FULL_DOORS];
 
 void mainTask(void *pdata)
 {
-	uint8 err,t;
+	uint8 err,t,ntype,nid;
 	uint8 mbuf[8];
 	struct tag_nodemsg *msg;
 	struct tag_attrib *attr;
+	DATETIME *dt;
 	pdata = pdata;
+	dt = (DATETIME *)mbuf;
 	msg = (struct tag_nodemsg *)mbuf;
 	attr = (struct tag_attrib *)mbuf;
 	TargetInit();
-	OSTaskCreate (InputPinTask,(void *)0, &InputTaskStk[TaskStkLengh - 1], 6);	
+	OSTaskCreate (InputPinTask,(void *)0, &InputTaskStk[TaskStkLengh - 1], 8);	
 	OSTaskCreate (PcLineTask,(void *)0, &ComTaskStk[TaskStkLengh - 1], 4);	
 	while(1)
 	{
 		msg->size = 6;
 		NMsgQRead( msg, msgBuf);
-		switch(msg->node)
+		ntype = msg->node & 0x7;
+		nid = (msg->node >> 3);
+		switch( ntype )
 		{
 			case READERDATA_NODE:
 				{
@@ -163,7 +148,7 @@ void mainTask(void *pdata)
 					exist_p *= 2;
 					empty_p =  exist_p / 528;
 					at45db_Page_Read( empty_p + USER_INFO_PAGE, exist_p % 528, mbuf , 8);
-					//info->group[0]
+					
 					
 					
 									
@@ -171,27 +156,28 @@ void mainTask(void *pdata)
 				break;
 			case MEGNET_NODE:
 				t = (msg->msg & 0x1);
-				at45db_Page_Read(GROUP_PAGE, ATTRIB_BA, mbuf, 8);			
+				at45db_Page_Read(GROUP_PAGE + nid, ATTRIB_BA, mbuf, 8);			
 				OS_ENTER_CRITICAL();
 				if( t & attr->megnet )
 				{
 					//set megnet alarm					
-					timecount[0].megnet_count = attr->megnet_delay;
+					timecount[nid].megnet_count = attr->megnet_delay;
 					
 				}
 				else
-				{					
-					timecount[0].megnet_count = 0;					
+				{	
+					//close megnet alarm				
+					timecount[nid].megnet_count = 0xff;					
 				}
 				OS_EXIT_CRITICAL();			
 				break;
 			case EXIT_NODE:			
 				t = (msg->msg & 0x1);
-				at45db_Page_Read(GROUP_PAGE, ATTRIB_BA, mbuf, 8);
+				at45db_Page_Read(GROUP_PAGE + nid, ATTRIB_BA, mbuf, 8);
 				OS_ENTER_CRITICAL();
 				if( attr->link < 16  )
 				{
-					if( timecount[attr->link].megnet_count != 0 )
+					if( timecount[attr->link].megnet_count != 0xff )
 					{
 						OS_EXIT_CRITICAL();
 						break;
@@ -199,7 +185,9 @@ void mainTask(void *pdata)
 				}			
 				if( t & attr->button )
 				{
-					timecount[0].door_count = attr->door_delay;
+					timecount[nid].door_count = attr->door_delay;
+					readRTC(dt);
+					LogWrite( (i<<3) + DOOR_NODE, 0, 0, dt->value);
 				}
 				
 				OS_EXIT_CRITICAL();			
@@ -211,14 +199,23 @@ void mainTask(void *pdata)
 	}			
 }
 
+
+
+
+
 void TimeTask(void *pdata)
 {
 	int i;
+	uint8 mbuf[8];
+	struct tag_attrib *attr;
+	DATETIME *dt;
+	attr = (struct tag_attrib *)mbuf;
+	dt = (DATETIME *)mBuf;
 	pdata = pdata;
 	while(1)
-	{
-		
-		for( i = 0; i < 2; i++ )
+	{	
+		OS_ENTER_CRITICAL();	
+		for( i = 0; i < FULL_DOORS; i++ )
 		{
 			if(timecount[i].door_count)
 			{
@@ -227,155 +224,35 @@ void TimeTask(void *pdata)
 			else
 			{
 				//close door
-				OS_ENTER_CRITICAL();
 				
+				IOSET = PIN_DOOR1;
 				
-				OS_EXIT_CRITICAL();			
-			}
-			if( timecount[i].door_count == 0 && timecount[0].megnet_count)
-			{
-				timecount[i].megnet_count--;	
+				if( timecount[i].megnet_count != 0xff &&  
+					timecount[i].megnet_count != 0x0)
+				{
+					timecount[i].megnet_count--;
+				}else if( timecount[i].megnet_count != 0x00 )
+				{
+;
+					at45db_Page_Read(GROUP_PAGE + i, ATTRIB_BA, mbuf, 8);
+					timecount[i].megnet_count = attr->megnet_delay;	
+					//read rtc
+					readRTC(dt);									
+					//write log
+					LogWrite( (i<<3) + MEGNET_NODE, ALARM_TYPE, 0, dt->value);
+
+				}						
 			}
 		}
+		OS_EXIT_CRITICAL();	
 		OSTimeDly(200);
 	}
 	
 }
 
-struct tag_inpin
-{
-	uint16	megnet_state	: 	3;
-	uint16	megnet			:	1;
-	uint16	exit_state 		:	3;
-	uint16	exit			:	1;
-	uint16  alarm_state		:	3;
-	uint16  alarm			:	1;	
-	uint16	other_state		:	3;
-	uint16	other			:	1;	
-}pin[2];
 
-#define PIN_MEGNET1_BIT		4
-#define PIN_EXIT1_BIT		5
-#define PIN_MEGNET2_BIT		6
-#define PIN_EXIT2_BIT		7
 
-#define PIN_MEGNET1	( 1 << PIN_MEGNET1_BIT )
-#define PIN_EXIT1	( 1 << PIN_EXIT1_BIT )
-#define PIN_MEGNET2 ( 1 << PIN_MEGNET2_BIT )
-#define PIN_EXIT2	( 1 << PIN_EXIT2_BIT )
 
-#define PIN_IN_MASK (PIN_MEGNET1 |  PIN_EXIT1 | PIN_MEGNET2 | PIN_EXIT2 )
-
-void InputPinTask( void *pdata)
-{
-	uint32 pin_state,pin_prev_state, t;
-	uint8 mbuf[2];
-	struct tag_nodemsg *msg;
-	msg = (struct tag_nodemsg *)mbuf;	
-	msg->size = 2;
-	pdata = pdata;
-	pin_prev_state = pin_state = IOPIN;	
-	while(1)
-	{	
-		OSTimeDly(2);
-		
-		pin_state = IOPIN;
-		t = (pin_state ^ pin_prev_state);
-		if( t & PIN_IN_MASK )
-		{
-			if( PIN_MEGNET1 & t )
-			{
-				pin[0].megnet_state = 0;
-				pin[0].megnet = (pin_state >> PIN_MEGNET1_BIT);
-			}
-			if( PIN_MEGNET2 & t )
-			{
-				pin[1].megnet_state = 0;
-				pin[1].megnet = (pin_state >> PIN_MEGNET2_BIT);
-			}
-			if( PIN_EXIT1 & t )
-			{
-				pin[0].exit_state = 0;
-				pin[0].exit = (pin_state >> PIN_EXIT1_BIT);
-			}
-			if( PIN_EXIT2 & t )
-			{
-				pin[1].exit_state = 0;
-				pin[1].exit = (pin_state >> PIN_EXIT2_BIT);
-			}
-		}	
-		
-		
-		if( pin[0].megnet_state < 2 )
-		{
-			pin[0].megnet_state++;
-		}else if( pin[0].megnet_state == 2)
-		{
-			
-			msg->node = megnet1;
-			msg->msg = pin[0].megnet;
-			if( NMsgQWrite(msgBuf, msg) == QUEUE_OK )
-				pin[0].megnet_state = 3;
-		}
-		
-		if( pin[1].megnet_state < 2 )
-			pin[1].megnet_state++;
-		else if( pin[1].megnet_state == 2)
-		{			
-			msg->node = megnet2;
-			msg->msg = pin[1].megnet;
-			if( NMsgQWrite(msgBuf, msg) == QUEUE_OK )
-				pin[1].megnet_state = 3;
-		}			
-			
-		if( pin[0].exit_state < 2 )
-			pin[0].exit_state++;
-		else if( pin[0].exit_state == 2)
-		{			
-			msg->node = exit1;
-			msg->msg = pin[0].exit;
-			if( NMsgQWrite(msgBuf, msg) == QUEUE_OK )
-				pin[0].exit_state = 3;
-		}
-					
-		if( pin[1].exit_state < 2 )
-			pin[1].exit_state++;
-		else if( pin[1].exit_state == 2)
-		{
-			pin[1].exit_state = 3;
-			msg->node = exit2;
-			msg->msg = pin[1].exit;
-			if( NMsgQWrite(msgBuf, msg) == QUEUE_OK )
-				pin[1].exit_state = 3;
-
-		}	
-		
-	}
-
-}
-/*********************************************************************************************************
-**                            Task1 任务1
-**                        向串口0发送字符串“i am task b.”
-********************************************************************************************************/
-/*
-void Task1	(void *pdata)
-{
-	uint8 err;
-	uint8 str1[]="i am task b.";
-	
-	pdata = pdata;
-	
-	while (1)
-	{
-		
-		OSSemPend(DispSem, 0, & err);	//  等待信号量
-		UART0_SendStr(str1);
-		err = OSSemPost(DispSem);		// 发送信号量
-
-	}
-}
-   
- */ 
 /*********************************************************************************************************
 **                            End Of File
 ********************************************************************************************************/

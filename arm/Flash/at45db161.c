@@ -5,11 +5,7 @@ P0.6-MOSI
 P0.7-MCS
 */
 #include "config.h"
-#define MSCK		0x20000
-#define MISO		0x40000
-#define MOSI		0x80000
-#define MCS			0x100000
-//#define MDRY		0x800000
+#define MCS			PIN_MCS
 static OS_EVENT *FlashSem;
 static uint8 UseFlashTaskPro;
 uint8 FlashInit(void)
