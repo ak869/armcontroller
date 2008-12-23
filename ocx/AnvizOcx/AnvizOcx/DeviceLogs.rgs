@@ -1,0 +1,25 @@
+HKCR
+{
+	AnvizOcx.DeviceLogs.1 = s 'DeviceLogs Class'
+	{
+		CLSID = s '{D4239CB7-86BF-47B8-8E20-38D43A233F23}'
+	}
+	AnvizOcx.DeviceLogs = s 'DeviceLogs Class'
+	{
+		CLSID = s '{D4239CB7-86BF-47B8-8E20-38D43A233F23}'
+		CurVer = s 'AnvizOcx.DeviceLogs.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {D4239CB7-86BF-47B8-8E20-38D43A233F23} = s 'DeviceLogs Class'
+		{
+			ProgID = s 'AnvizOcx.DeviceLogs.1'
+			VersionIndependentProgID = s 'AnvizOcx.DeviceLogs'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+			}
+			'TypeLib' = s '{1C19F271-4C93-4F4B-8422-308103ED3887}'
+		}
+	}
+}

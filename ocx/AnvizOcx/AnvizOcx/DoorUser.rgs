@@ -1,0 +1,26 @@
+HKCR
+{
+	AnvizOcx.DoorUser.1 = s 'DoorUser Class'
+	{
+		CLSID = s '{3D91B3C8-917C-4D5B-95D9-6761A358628F}'
+	}
+	AnvizOcx.DoorUser = s 'DoorUser Class'
+	{
+		CLSID = s '{3D91B3C8-917C-4D5B-95D9-6761A358628F}'
+		CurVer = s 'AnvizOcx.DoorUser.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {3D91B3C8-917C-4D5B-95D9-6761A358628F} = s 'DoorUser Class'
+		{
+			ProgID = s 'AnvizOcx.DoorUser.1'
+			VersionIndependentProgID = s 'AnvizOcx.DoorUser'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+			'TypeLib' = s '{1C19F271-4C93-4F4B-8422-308103ED3887}'
+		}
+	}
+}

@@ -1,0 +1,25 @@
+HKCR
+{
+	AnvizOcx.BusPortData.1 = s 'BusPortData Class'
+	{
+		CLSID = s '{903CD9C7-2FE2-4F2C-8768-5786702B9F55}'
+	}
+	AnvizOcx.BusPortData = s 'BusPortData Class'
+	{
+		CLSID = s '{903CD9C7-2FE2-4F2C-8768-5786702B9F55}'
+		CurVer = s 'AnvizOcx.BusPortData.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {903CD9C7-2FE2-4F2C-8768-5786702B9F55} = s 'BusPortData Class'
+		{
+			ProgID = s 'AnvizOcx.BusPortData.1'
+			VersionIndependentProgID = s 'AnvizOcx.BusPortData'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+			}
+			'TypeLib' = s '{1C19F271-4C93-4F4B-8422-308103ED3887}'
+		}
+	}
+}

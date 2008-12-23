@@ -1,0 +1,26 @@
+HKCR
+{
+	AnvizOcx.ComBus.1 = s 'ComBus Class'
+	{
+		CLSID = s '{216CF6DA-4F04-40E9-B4D2-C7091EAB4C1B}'
+	}
+	AnvizOcx.ComBus = s 'ComBus Class'
+	{
+		CLSID = s '{216CF6DA-4F04-40E9-B4D2-C7091EAB4C1B}'
+		CurVer = s 'AnvizOcx.ComBus.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {216CF6DA-4F04-40E9-B4D2-C7091EAB4C1B} = s 'ComBus Class'
+		{
+			ProgID = s 'AnvizOcx.ComBus.1'
+			VersionIndependentProgID = s 'AnvizOcx.ComBus'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+			'TypeLib' = s '{1C19F271-4C93-4F4B-8422-308103ED3887}'
+		}
+	}
+}

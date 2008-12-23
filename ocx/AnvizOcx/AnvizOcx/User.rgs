@@ -1,0 +1,26 @@
+HKCR
+{
+	AnvizOcx.User.1 = s 'User Class'
+	{
+		CLSID = s '{BA970C53-9ED4-44F2-948F-12B56A40DB05}'
+	}
+	AnvizOcx.User = s 'User Class'
+	{
+		CLSID = s '{BA970C53-9ED4-44F2-948F-12B56A40DB05}'
+		CurVer = s 'AnvizOcx.User.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {BA970C53-9ED4-44F2-948F-12B56A40DB05} = s 'User Class'
+		{
+			ProgID = s 'AnvizOcx.User.1'
+			VersionIndependentProgID = s 'AnvizOcx.User'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+			'TypeLib' = s '{1C19F271-4C93-4F4B-8422-308103ED3887}'
+		}
+	}
+}

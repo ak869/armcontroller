@@ -1,0 +1,25 @@
+HKCR
+{
+	AnvizOcx.AnvizItems.1 = s 'AnvizItems Class'
+	{
+		CLSID = s '{2AEDEFE7-A906-4CF2-A8C8-0628E09CD3F7}'
+	}
+	AnvizOcx.AnvizItems = s 'AnvizItems Class'
+	{
+		CLSID = s '{2AEDEFE7-A906-4CF2-A8C8-0628E09CD3F7}'
+		CurVer = s 'AnvizOcx.AnvizItems.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {2AEDEFE7-A906-4CF2-A8C8-0628E09CD3F7} = s 'AnvizItems Class'
+		{
+			ProgID = s 'AnvizOcx.AnvizItems.1'
+			VersionIndependentProgID = s 'AnvizOcx.AnvizItems'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+			}
+			'TypeLib' = s '{1C19F271-4C93-4F4B-8422-308103ED3887}'
+		}
+	}
+}
