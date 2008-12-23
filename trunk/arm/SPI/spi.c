@@ -65,21 +65,15 @@ static uint8 dev_type;
 **------------------------------------------------------------------------------------------------------
 ********************************************************************************************************/
 
-#define MSCK		0x20000
-#define MISO		0x40000
-#define MOSI		0x80000
-#define MCS			0x100000
-//#define MDRY		0x800000
 
-#define FALSE_CS	1
 #define SSP_RXFIFO				0x6
 #define SSP_TXFIFO				0x8
 void SSPClearfifo(void);
 uint8 SSPInit(uint8 Fdiv)
 {
 	PINSEL1 = (PINSEL1 & (~(0xFF << 2))) | (0x2A << 2);	
-	IOSET = MCS;
-	IODIR |= MCS;
+	IOSET = PIN_MCS;
+	IODIR |= PIN_MCS;
 	SSPIMSC = 0x0;	
     SSPCR0 = (0x00 << 8) |              // SCR  设置SSI时钟分频
              (0x01 << 7) |              // CPHA 时钟输出相位,仅SPI模式有效 

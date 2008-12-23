@@ -107,6 +107,8 @@ typedef double         fp64;                    /* double precision floating poi
 
 #include 	"..\..\uart0\uart0.h"
 #define UART0_SEND_QUEUE_LENGTH   60    /* 给UART0发送数据队列分配的空间大小 */
+#include	"..\..\system\pindef.h"
+#include	"..\..\system\sysdef.h"
 #include 	"..\..\flash\at45db161.h"
 
 #include 	"..\..\fs\fs.h"
