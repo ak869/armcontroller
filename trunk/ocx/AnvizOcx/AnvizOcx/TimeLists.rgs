@@ -1,0 +1,25 @@
+HKCR
+{
+	AnvizOcx.TimeLists.1 = s 'TimeLists Class'
+	{
+		CLSID = s '{C3A3F6EF-1DF6-4715-A414-62107C72BF6D}'
+	}
+	AnvizOcx.TimeLists = s 'TimeLists Class'
+	{
+		CLSID = s '{C3A3F6EF-1DF6-4715-A414-62107C72BF6D}'
+		CurVer = s 'AnvizOcx.TimeLists.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {C3A3F6EF-1DF6-4715-A414-62107C72BF6D} = s 'TimeLists Class'
+		{
+			ProgID = s 'AnvizOcx.TimeLists.1'
+			VersionIndependentProgID = s 'AnvizOcx.TimeLists'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+			}
+			'TypeLib' = s '{1C19F271-4C93-4F4B-8422-308103ED3887}'
+		}
+	}
+}

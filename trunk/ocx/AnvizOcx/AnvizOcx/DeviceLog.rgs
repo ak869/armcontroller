@@ -1,0 +1,26 @@
+HKCR
+{
+	AnvizOcx.DeviceLog.1 = s 'DeviceLog Class'
+	{
+		CLSID = s '{198594D8-4EDA-4905-8829-32E034A24C29}'
+	}
+	AnvizOcx.DeviceLog = s 'DeviceLog Class'
+	{
+		CLSID = s '{198594D8-4EDA-4905-8829-32E034A24C29}'
+		CurVer = s 'AnvizOcx.DeviceLog.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {198594D8-4EDA-4905-8829-32E034A24C29} = s 'DeviceLog Class'
+		{
+			ProgID = s 'AnvizOcx.DeviceLog.1'
+			VersionIndependentProgID = s 'AnvizOcx.DeviceLog'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+			'TypeLib' = s '{1C19F271-4C93-4F4B-8422-308103ED3887}'
+		}
+	}
+}

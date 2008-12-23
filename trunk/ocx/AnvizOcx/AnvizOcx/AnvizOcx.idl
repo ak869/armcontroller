@@ -1,0 +1,450 @@
+// AnvizOcx.idl : IDL source for AnvizOcx
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library (AnvizOcx.tlb) and marshalling code.
+
+#include "olectl.h"
+import "oaidl.idl";
+import "ocidl.idl";
+
+
+
+
+	enum Anviz_WeekValue
+	{
+		[helpstring("Sunday")]			Sun			=	0x0000,
+		[helpstring("Monday")]			Mon			=	0x0001,
+		[helpstring("Tuesday")]			Tue			=	0x0002,
+		[helpstring("Wednesday")]		Wed			=	0x0003,
+		[helpstring("Thursday")]		Thu			=	0x0004,
+		[helpstring("Friday")]			Fri			=	0x0005,
+		[helpstring("Saturday")]		Sat			=	0x0006
+
+	};
+	enum Anviz_TimeType
+	{
+		[helpstring("Start time")]			t_Start	=	0x0001,
+		[helpstring("End time")]			t_End		=	0x0002		
+	};
+interface IBus;
+interface IBusPortData ;
+//{DB384A48-1CD4-40ac-B247-DB606B350AC3}
+[
+	object,
+	uuid(DB384A48-1CD4-40ac-B247-DB606B350AC3),
+	dual,
+	nonextensible,
+	helpstring("IDevice Interface"),
+	pointer_default(unique)
+]
+interface IDevice: IDispatch{
+	[id(1), helpstring("method LinkBus"), hidden] HRESULT LinkBus([in] IBus * newValue);
+	[id(2), helpstring("method UnlinkBus"), hidden] HRESULT UnlinkBus(void);
+	};
+//{F35C0B16-BEC1-4c01-9B78-A6629038DC92}
+[
+	object,
+	uuid(F35C0B16-BEC1-4c01-9B78-A6629038DC92),
+	dual,
+	nonextensible,
+	helpstring("IBus Interface"),
+	pointer_default(unique)
+]
+interface IBus: IDispatch{
+	[id(1), helpstring("method SendData")] HRESULT SendData([in] IBusPortData * newVal);
+	};
+
+
+[
+	object,
+	uuid(B3DD10E9-0000-4DC1-83B6-2CA5BBFE22C4),
+	dual,
+	nonextensible,
+	helpstring("IAnvizItems Interface"),
+	pointer_default(unique)
+]
+interface IAnvizItems : IDispatch{
+	[id(DISPID_NEWENUM), propget] HRESULT _NewEnum([out, retval] IUnknown** ppUnk);
+	[propget, id(DISPID_VALUE), helpstring("property Item")] HRESULT Item([in] VARIANT Index, [out, retval] VARIANT* pVal);
+	[propget, id(1), helpstring("property Count")] HRESULT Count([out, retval] long* pVal);
+	[id(2), helpstring("method Add")] HRESULT Add([in] VARIANT Key, [in] VARIANT Value);
+	[id(3), helpstring("method Remove")] HRESULT Remove([in] VARIANT Index);
+	[id(4), helpstring("method Clear")] HRESULT Clear(void);
+	};
+
+[
+	object,
+	uuid(678E6AB5-E9FF-44BD-90F9-C8BDDEF18714),
+	dual,
+	nonextensible,
+	helpstring("IAnviz Interface"),
+	pointer_default(unique)
+]
+interface IAnviz : IDispatch{
+	[propget, id(1), helpstring("property BusItems")] HRESULT BusItems([out, retval] IAnvizItems** pVal);
+	};
+
+
+[
+	object,
+	uuid(DC441879-14CB-4C26-83ED-87E77EE518DD),
+	dual,
+	nonextensible,
+	helpstring("IComBus Interface"),
+	pointer_default(unique)
+]
+interface IComBus : IDispatch{
+	[propget, id(1), helpstring("property MachineItem")] HRESULT MachineItem([out, retval] IAnvizItems** pVal);
+//	[id(2), helpstring("method SendData"), hidden] HRESULT SendData([in] VARIANT nVal);
+	};
+
+
+[
+	object,
+	uuid(3A6AD31A-AC74-4FBD-9367-44DB3969755D),
+	dual,
+	nonextensible,
+	helpstring("ITimeList Interface"),
+	pointer_default(unique)
+]
+interface ITimeList : IDispatch{
+	[propget, id(1), helpstring("property Hour")] HRESULT Hour([in] enum Anviz_TimeType Attrib,[out, retval] LONG* pVal);
+	[propput, id(1), helpstring("property Hour")] HRESULT Hour([in] enum Anviz_TimeType Attrib,[in] LONG newVal);
+	[propget, id(2), helpstring("property Minute")] HRESULT Minute([in] enum Anviz_TimeType Attrib, [out, retval] LONG* pVal);
+	[propput, id(2), helpstring("property Minute")] HRESULT Minute([in] enum Anviz_TimeType Attrib, [in] LONG newVal);
+	[propget, id(3), helpstring("property Other")] HRESULT Other([out, retval] LONG* pVal);
+	[propput, id(3), helpstring("property Other")] HRESULT Other([in] LONG newVal);
+ 	[id(4), helpstring("method IsDay")] HRESULT IsDay([in] enum Anviz_WeekValue WeekofDay , [out,retval] VARIANT_BOOL* pRetVal);
+	[id(5), helpstring("method SetDay")] HRESULT SetDay([in] enum Anviz_WeekValue WeekofDay);
+	[propget, id(6), helpstring("property ID")] HRESULT ID([out, retval] LONG* pVal);
+	};
+[
+	object,
+	uuid(48842D72-2D00-42FB-8606-521915119DF6),
+	dual,
+	nonextensible,
+	helpstring("ITimeLists Interface"),
+	pointer_default(unique)
+]
+interface ITimeLists : IDispatch{
+	[propget, id(DISPID_VALUE), helpstring("property Item")] HRESULT Item([in] LONG Index, [out, retval] ITimeList** pVal);
+	[propget, id(DISPID_NEWENUM), helpstring("property _NewEnum")] HRESULT _NewEnum([out, retval] IUnknown** pVal);
+	[propget, id(1), helpstring("property Count")] HRESULT Count([out, retval] LONG* pVal);
+	};
+
+[
+	object,
+	uuid(06A05261-2B86-4E72-BB3F-0B00C9EE3E38),
+	dual,
+	nonextensible,
+	helpstring("IDoorGroup Interface"),
+	pointer_default(unique)
+]
+interface IDoorGroup : IDispatch{
+	[propget, id(1), helpstring("property Power")] HRESULT Power([out, retval] LONG* pVal);
+	[propput, id(1), helpstring("property Power")] HRESULT Power([in] LONG newVal);
+	[id(2), helpstring("method Updata")] HRESULT Updata(void);
+	[id(3), helpstring("method Download")] HRESULT Download(void);
+	[propget, id(4), helpstring("property TimeLists")] HRESULT TimeLists([out, retval] ITimeLists** pVal);
+	[propget, id(5), helpstring("property ID")] HRESULT ID([out, retval] LONG* pVal);
+	};
+
+
+[
+	object,
+	uuid(40FD88E4-9EF2-4E2C-839E-2C6B7E6837AF),
+	dual,
+	nonextensible,
+	helpstring("IDoorGroups Interface"),
+	pointer_default(unique)
+]
+interface IDoorGroups : IDispatch{
+	[propget, id(DISPID_NEWENUM), helpstring("property _NewEnum")] HRESULT _NewEnum([out, retval] IUnknown** pVal);
+	[propget, id(DISPID_VALUE), helpstring("property Item")] HRESULT Item([in] LONG Index, [out, retval] IDoorGroup** pVal);
+	[propget, id(1), helpstring("property Count")] HRESULT Count([out, retval] LONG* pVal);
+	};
+[
+	object,
+	uuid(095E596A-7292-4A46-84EA-83B3B6036C17),
+	dual,
+	nonextensible,
+	helpstring("IDoorState Interface"),
+	pointer_default(unique)
+]
+interface IDoorState : IDispatch{
+	[propget, id(1), helpstring("property TimeList")] HRESULT TimeList([out, retval] ITimeList** pVal);
+	[propget, id(2), helpstring("property State")] HRESULT State([out, retval] LONG* pVal);
+	[propput, id(2), helpstring("property State")] HRESULT State([in] LONG newVal);
+	[id(3), helpstring("method Updata")] HRESULT Updata(void);
+	[id(4), helpstring("method Download")] HRESULT Download(void);
+	[propget, id(5), helpstring("property ID")] HRESULT ID([out, retval] LONG* pVal);
+	};
+[
+	object,
+	uuid(4506665A-662B-4067-ABC2-B9E27B50D092),
+	dual,
+	nonextensible,
+	helpstring("IDoorStates Interface"),
+	pointer_default(unique)
+]
+interface IDoorStates : IDispatch{
+	[propget, id(DISPID_VALUE), helpstring("property Item")] HRESULT Item([out, retval] IDoorState** pVal);
+	[propget, id(DISPID_NEWENUM), helpstring("property _NewEnum")] HRESULT _NewEnum([out, retval] IUnknown** pVal);
+	[propget, id(1), helpstring("property Count")] HRESULT Count([out, retval] LONG* pVal);
+	};
+
+[
+	object,
+	uuid(64FD3185-9E5A-41D9-BD2B-D4F8FDEDD666),
+	dual,
+	nonextensible,
+	helpstring("IUser Interface"),
+	pointer_default(unique)
+]
+interface IUser : IDispatch{
+	[id(1), helpstring("method AddGroup")] HRESULT AddGroup([in] LONG GroupIndex);
+	[propget, id(2), helpstring("property Groups")] HRESULT Groups([out, retval] IDoorGroups ** pVal);
+	[id(3), helpstring("method RemoveGroup")] HRESULT RemoveGroup([in] LONG GroupIndex);
+	[id(4), helpstring("method SetAttrib")] HRESULT SetAttrib([in] LONG Index);
+	[id(5), helpstring("method ClearAttrib")] HRESULT ClearAttrib([in] LONG Index);
+	[id(6), helpstring("method GetAttrib")] HRESULT GetAttrib([in] LONG Index, [out,retval] LONG* pVal);
+	[propget, id(7), helpstring("property ID")] HRESULT CardID([out, retval] LONG* pVal);
+	[propget, id(8), helpstring("property Area")] HRESULT AreaID([out, retval] LONG* pVal);
+	[propget, id(9), helpstring("property LongID")] HRESULT UserID([out, retval] LONG* pVal);
+	[id(10), helpstring("method Updata")] HRESULT Updata(void);
+	[id(11), helpstring("method Download")] HRESULT Download(void);
+	};
+[
+	object,
+	uuid(F691BF16-41C6-433C-AE22-881AF03347F8),
+	dual,
+	nonextensible,
+	helpstring("IUsers Interface"),
+	pointer_default(unique)
+]
+interface IUsers : IDispatch{
+	[propget, id(DISPID_VALUE), helpstring("property Item")] HRESULT Item([in]VARIANT Index,[out, retval] IUser** pVal);
+	[propget, id(DISPID_NEWENUM), helpstring("property _NewEnum")] HRESULT _NewEnum([out, retval] IUnknown** pVal);
+	[id(1), helpstring("method Add")] HRESULT Add([in] LONG Area, [in] LONG ID, [in,defaultvalue(0)] LONG LongID, [out,retval] IUser** pVal);
+	[id(2), helpstring("method Remove")] HRESULT Remove([in] LONG Area, [in] LONG ID, [in,defaultvalue(0)] LONG LongID);
+	[id(3), helpstring("method Updata")] HRESULT Updata(void);
+	[id(4), helpstring("method Download")] HRESULT Download(void);
+	[propget, id(5), helpstring("property Count")] HRESULT Count([out, retval] LONG* pVal);
+	};
+ [
+	object,
+	uuid(11D2320E-E03A-4827-BA16-9B6955C990A8),
+	dual,
+	nonextensible,
+	helpstring("IDeviceLog Interface"),
+	pointer_default(unique)
+]
+interface IDeviceLog : IDispatch{
+	[propget, id(1), helpstring("property LogID")] HRESULT LogID([out, retval] LONG* pVal);
+	[propget, id(2), helpstring("property Area")] HRESULT AreaID([out, retval] LONG* pVal);
+	[propget, id(3), helpstring("property CardID")] HRESULT CardID([out, retval] LONG* pVal);
+	[propget, id(4), helpstring("property UserID")] HRESULT UserID([out, retval] LONG* pVal);
+	[propget, id(5), helpstring("property DateTime")] HRESULT DateTime([out, retval] DATE* pVal);
+	[propget, id(6), helpstring("property Node")] HRESULT Node([out, retval] LONG* pVal);
+	[propget, id(7), helpstring("property EventID")] HRESULT EventID([out, retval] LONG* pVal);
+	};
+[
+	object,
+	uuid(05874CFC-144F-4812-B7AE-12047FEA2699),
+	dual,
+	nonextensible,
+	helpstring("IDeviceLogs Interface"),
+	pointer_default(unique)
+]
+interface IDeviceLogs : IDispatch{
+	[propget, id(DISPID_NEWENUM), helpstring("property _NewEnum")] HRESULT _NewEnum([out, retval] IUnknown** pVal);
+	[propget, id(DISPID_VALUE), helpstring("property Item")] HRESULT Item([in]LONG Index,[out, retval] IDeviceLog** pVal);
+	[id(1), helpstring("method Download")] HRESULT Download([in,defaultvalue(0)] LONG ID, [out,retval] VARIANT_BOOL* pRetVal);
+	[propget, id(2), helpstring("property Count")] HRESULT Count([out, retval] LONG* pVal);
+	};
+
+[
+	object,
+	uuid(77342A19-4433-489D-854B-ACBAC34DF47A),
+	dual,
+	nonextensible,
+	helpstring("IAMJ03 Interface"),
+	pointer_default(unique)
+]
+interface IAMJ03 : IDispatch{
+	[propget, id(1), helpstring("property DoorGroups")] HRESULT DoorGroups([out, retval] IDoorGroups** pVal);
+	[propget, id(2), helpstring("property Attrib")] HRESULT Attrib([in] LONG Node, [out, retval] LONG* pVal);
+	[propput, id(2), helpstring("property Attrib")] HRESULT Attrib([in] LONG Node, [in] LONG newVal);
+	[propget, id(3), helpstring("property Status")] HRESULT Status([in] LONG Node, [out, retval] LONG* pVal);
+	[propput, id(3), helpstring("property Status")] HRESULT Status([in] LONG Node, [in] LONG newVal);
+	[propget, id(4), helpstring("property DoorStates")] HRESULT DoorStates([out, retval] IDoorStates** pVal);
+	[propget, id(5), helpstring("property Users")] HRESULT Users([out, retval] IUsers ** pVal);
+	[id(6), helpstring("method GetRTCTime")] HRESULT GetRTCTime([in,out] DATE * pValue, [out,retval] VARIANT_BOOL* pRetVal);
+	[id(7), helpstring("method SetRTCTime")] HRESULT SetRTCTime([in] DATE Value, [out,retval] VARIANT_BOOL* pRetVal);
+	[propget, id(8), helpstring("property MachineAddr")] HRESULT MachineAddr([out, retval] LONG* pVal);
+	[propput, id(8), helpstring("property MachineAddr")] HRESULT MachineAddr([in] LONG pVal);
+	[id(9), helpstring("method GetDevVersion")] HRESULT GetDevVersion([in,out] LONG * value, [out,retval] VARIANT_BOOL* pRetVal);
+	[propget, id(10), helpstring("property Logs")] HRESULT Logs([out, retval] IDeviceLogs** pVal);
+	};
+
+[
+	object,
+	uuid(014BA2C5-63D4-469F-8AFD-ECDEF42B8B63),
+	dual,
+	nonextensible,
+	helpstring("IBusPortData Interface"),
+	pointer_default(unique)
+]
+interface IBusPortData : IDispatch{
+	[propget, id(1), helpstring("property Buffer")] HRESULT Buffer([out, retval] LONG* pVal);
+	[propget, id(2), helpstring("property Size")] HRESULT Size([out, retval] LONG* pVal);
+	[id(3), helpstring("method SetBuffer")] HRESULT SetBuffer([in] LONG* Buf, [in] LONG nSize);
+	[propget, id(4), helpstring("property Param")] HRESULT Param([in]LONG id, [out, retval] LONG* pVal);
+	[propput, id(4), helpstring("property Param")] HRESULT Param([in]LONG id, [in] LONG newVal);
+	};
+[
+	uuid(1C19F271-4C93-4F4B-8422-308103ED3887),
+	version(1.0),
+	helpstring("AnvizOcx 1.0 Type Library")
+]
+library AnvizOcxLib
+{
+	importlib("stdole2.tlb");
+	[
+		uuid(D762747D-6811-4C08-B640-BB5FBCCC2E08),
+		helpstring("_IAnvizEvents Interface")
+	]
+	dispinterface _IAnvizEvents
+	{
+		properties:
+		methods:
+			[id(1), helpstring("method BusMessage")] void BusMessage([in] BSTR BusIndex, [in] BSTR MachineIndex, [in] LONG uMessageID);
+		};
+	[
+		uuid(68361EBD-63AA-48A4-87FB-86C5585181F9),
+		control,
+		helpstring("Anviz Class")
+	]
+	coclass Anviz
+	{
+		[default] interface IAnviz;
+		[default, source] dispinterface _IAnvizEvents;
+	};
+	[
+		uuid(2AEDEFE7-A906-4CF2-A8C8-0628E09CD3F7),
+		helpstring("AnvizItems Class")
+	]
+	coclass AnvizItems
+	{
+		[default] interface IAnvizItems;
+	};
+	[
+		uuid(216CF6DA-4F04-40E9-B4D2-C7091EAB4C1B),
+		helpstring("ComBus Class")
+	]
+	coclass ComBus
+	{
+		[default] interface IComBus;
+	};
+	[
+		uuid(8A899939-DE76-4D15-9BCB-F89B6BC98AA2),
+		helpstring("AMJ03 Class")
+	]
+	coclass AMJ03
+	{
+		[default] interface IAMJ03;
+	};
+	[
+		uuid(E0E81ECE-8D5D-4D20-A6D1-449EE5CE8D48),
+		helpstring("DoorGroup Class")
+	]
+	coclass DoorGroup
+	{
+		[default] interface IDoorGroup;
+	};
+	[
+		uuid(316F4420-DBD2-40E2-9FB8-9FB95D04EC3C),
+		helpstring("TimeList Class")
+	]
+	coclass TimeList
+	{
+		[default] interface ITimeList;
+	};
+	[
+		uuid(C3A3F6EF-1DF6-4715-A414-62107C72BF6D),
+		helpstring("TimeLists Class")
+	]
+	coclass TimeLists
+	{
+		[default] interface ITimeLists;
+	};
+
+	[
+		uuid(DD841611-6898-4947-8ACF-215B16440422),
+		helpstring("DoorGroups Class")
+	]
+	coclass DoorGroups
+	{
+		[default] interface IDoorGroups;
+	};
+	[
+		uuid(647138DF-9C97-45FF-9394-A10C42FA1F37),
+		helpstring("DoorStates Class")
+	]
+	coclass DoorStates
+	{
+		[default] interface IDoorStates;
+	};
+	[
+		uuid(99DC8D84-86FD-43DC-A601-13CFEAA0DC1A),
+		helpstring("DoorState Class")
+	]
+	coclass DoorState
+	{
+		[default] interface IDoorState;
+	};
+	[
+		uuid(D2FBB274-0F67-42BC-A60D-712CD768A5A1),
+		helpstring("User Class")
+	]
+	coclass User
+	{
+		[default] interface IUser;
+	};
+	[
+		uuid(4449BC37-8370-4103-BC19-A051E59FDC1C),
+		helpstring("Users Class")
+	]
+	coclass Users
+	{
+		[default] interface IUsers;
+	};
+	[
+		uuid(198594D8-4EDA-4905-8829-32E034A24C29),
+		helpstring("DeviceLog Class")
+	]
+	coclass DeviceLog
+	{
+		[default] interface IDeviceLog;
+	};
+	[
+		uuid(D4239CB7-86BF-47B8-8E20-38D43A233F23),
+		helpstring("DeviceLogs Class")
+	]
+	coclass DeviceLogs
+	{
+		[default] interface IDeviceLogs;
+	};
+
+
+
+	[
+		uuid(903CD9C7-2FE2-4F2C-8768-5786702B9F55),
+		helpstring("BusPortData Class")
+	]
+	coclass BusPortData
+	{
+		[default] interface IBusPortData;
+	};
+};

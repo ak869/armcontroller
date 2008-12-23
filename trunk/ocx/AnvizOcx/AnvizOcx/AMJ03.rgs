@@ -1,0 +1,26 @@
+HKCR
+{
+	AnvizOcx.AMJ03.1 = s 'AMJ03 Class'
+	{
+		CLSID = s '{8A899939-DE76-4D15-9BCB-F89B6BC98AA2}'
+	}
+	AnvizOcx.AMJ03 = s 'AMJ03 Class'
+	{
+		CLSID = s '{8A899939-DE76-4D15-9BCB-F89B6BC98AA2}'
+		CurVer = s 'AnvizOcx.AMJ03.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {8A899939-DE76-4D15-9BCB-F89B6BC98AA2} = s 'AMJ03 Class'
+		{
+			ProgID = s 'AnvizOcx.AMJ03.1'
+			VersionIndependentProgID = s 'AnvizOcx.AMJ03'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+			'TypeLib' = s '{1C19F271-4C93-4F4B-8422-308103ED3887}'
+		}
+	}
+}

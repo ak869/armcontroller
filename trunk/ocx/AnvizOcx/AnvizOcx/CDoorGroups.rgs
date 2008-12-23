@@ -1,0 +1,25 @@
+HKCR
+{
+	AnvizOcx.CDoorGroups.1 = s 'CDoorGroups Class'
+	{
+		CLSID = s '{9F97D093-8B84-4BE9-9E04-E76BC6267F86}'
+	}
+	AnvizOcx.CDoorGroups = s 'CDoorGroups Class'
+	{
+		CLSID = s '{9F97D093-8B84-4BE9-9E04-E76BC6267F86}'
+		CurVer = s 'AnvizOcx.CDoorGroups.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {9F97D093-8B84-4BE9-9E04-E76BC6267F86} = s 'CDoorGroups Class'
+		{
+			ProgID = s 'AnvizOcx.CDoorGroups.1'
+			VersionIndependentProgID = s 'AnvizOcx.CDoorGroups'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+			}
+			'TypeLib' = s '{1C19F271-4C93-4F4B-8422-308103ED3887}'
+		}
+	}
+}

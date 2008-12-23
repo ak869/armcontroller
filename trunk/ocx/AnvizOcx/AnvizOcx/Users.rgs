@@ -1,0 +1,25 @@
+HKCR
+{
+	AnvizOcx.Users.1 = s 'Users Class'
+	{
+		CLSID = s '{4449BC37-8370-4103-BC19-A051E59FDC1C}'
+	}
+	AnvizOcx.Users = s 'Users Class'
+	{
+		CLSID = s '{4449BC37-8370-4103-BC19-A051E59FDC1C}'
+		CurVer = s 'AnvizOcx.Users.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {4449BC37-8370-4103-BC19-A051E59FDC1C} = s 'Users Class'
+		{
+			ProgID = s 'AnvizOcx.Users.1'
+			VersionIndependentProgID = s 'AnvizOcx.Users'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+			}
+			'TypeLib' = s '{1C19F271-4C93-4F4B-8422-308103ED3887}'
+		}
+	}
+}
