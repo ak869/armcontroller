@@ -1,0 +1,119 @@
+#ifndef _FS_H
+#define _FS_H
+
+/*
+
+						reader1------door1   		
+user	group						
+						reader2------door2
+
+*/
+
+/*
+	0		:	other
+	1		:	Attrib
+	2	- 7				: door_state
+	8 - 13			:	groupt:60
+	14					: door_groupt
+	15 - 74			: user_id
+	75 - 194		: user_info
+	
+
+*/
+
+struct tag_timelist{
+	uint32 hour_start : 5;
+	uint32 minute_start : 6;
+	uint32 hour_end : 5;
+	uint32 minute_end : 6;
+	uint32 weeks			: 3;
+	uint32	other			: 3;
+};//4
+/*
+	other
+	pageSize:1
+	Size: 4 * 12 * 8 = 48 * 8 = 384
+	List:8
+*/
+/*
+	pageSize:4
+	Size:2048
+	List:16 * 16
+*/
+struct tag_doorstatus{
+	struct tag_timelist t;
+	uint16 param;
+	uint8 type;//safe, open, close, none
+	uint8 crc;
+};//8
+
+/*
+
+	pageSize:	6
+	Size: 60 * 50 = 3000
+	List: 60
+*/
+struct tag_doorgroup
+{
+	struct timelist_tag t[8]; //32
+	uint16 param;
+	uint8 power;
+	uint8 crc
+};//36
+/*
+	page 0 - 59
+	pageSize:60
+	Size:31680
+	List:7920
+*/
+struct tag_userlist{
+	uint32 userid;
+};//4
+/*
+	page 60 - 179
+	pageSize:120
+	Size:63360
+	List:7920
+*/
+struct tag_userinfo
+{
+	uint8 doorgroup1;
+	uint8 doorgroup2;
+	uint8 doorgroup3;
+	uint8 doorgroup4;
+	uint8 doorgroup5;
+	uint8 doorgroup6;	
+	uint8 param; //fan qian
+	uint8 crc;
+};//8
+
+struct log_tag{	
+	uint32 id;
+	uint32 userid;	
+	struct
+	{
+		uint32 year:6;
+		uint32 month:4;
+		uint32 day:5;
+		uint32 hour:5;
+		uint32 minute:6;
+		uint32 second:6;
+	}
+	uint8 node;//门磁,拆机,门,卡,主机
+	uint8 type;//开门:0x10，门磁报警:0x20，Sensor报警:0x30 有效id:0x40，无效id(M):0x50, 1/2(L) 断电
+};//14
+
+struct tag_attrib{
+	uint16	megnet		:1;		//0
+	uint16   button		:1;		//1
+	uint16	feedback	:1;
+	uint16  alarm		:1;
+	uint16	other		:1;
+	uint16	link		:1;
+	uint16  door_submarine	:1;	
+	uint8	door_delay;
+	uint8	megnet_alarm;
+	uint8	card;
+};//5
+
+#endif
