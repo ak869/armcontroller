@@ -197,7 +197,9 @@
     UART0Init(9600);
     SSPInit(2);
     FlashInit();
-    LogInit();
+    RTCInit();
+    FsInit();
+    LogInit();    
     OS_EXIT_CRITICAL();
 }
 

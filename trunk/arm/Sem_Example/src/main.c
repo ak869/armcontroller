@@ -46,7 +46,7 @@ void 	Task1(void *pdata);			// Task1 ÈÎÎñ1
 */
 void PcLineTask(void  *pdata);
 void InputPinTask(void  *pdata);
-
+void mainTask(void *pdata);
 
 OS_EVENT *QEmptySem, *QFullSem;
 int main (void)
@@ -55,7 +55,7 @@ int main (void)
 	
 
 	NMsgQCreate(msgBuf, sizeof(msgBuf));																								;
-	OSTaskCreate (PcLineTask,(void *)0, &TaskStk[TaskStkLengh - 1], 5);		
+	OSTaskCreate (mainTask,(void *)0, &TaskStk[TaskStkLengh - 1], 5);		
 	OSStart ();
 	return 0;															
 }
@@ -127,7 +127,7 @@ void mainTask(void *pdata)
 	attr = (struct tag_attrib *)mbuf;
 	TargetInit();
 	OSTaskCreate (InputPinTask,(void *)0, &InputTaskStk[TaskStkLengh - 1], 8);	
-	OSTaskCreate (PcLineTask,(void *)0, &ComTaskStk[TaskStkLengh - 1], 4);	
+//	OSTaskCreate (PcLineTask,(void *)0, &ComTaskStk[TaskStkLengh - 1], 4);	
 	while(1)
 	{
 		msg->size = 6;
@@ -147,10 +147,7 @@ void mainTask(void *pdata)
 					}
 					exist_p *= 2;
 					empty_p =  exist_p / 528;
-					at45db_Page_Read( empty_p + USER_INFO_PAGE, exist_p % 528, mbuf , 8);
-					
-					
-					
+					at45db_Page_Read( empty_p + USER_INFO_PAGE, exist_p % 528, mbuf , 8);					
 									
 				}
 				break;
@@ -186,8 +183,8 @@ void mainTask(void *pdata)
 				if( t & attr->button )
 				{
 					timecount[nid].door_count = attr->door_delay;
-					readRTC(dt);
-					LogWrite( (i<<3) + DOOR_NODE, 0, 0, dt->value);
+					ReadRTC(dt);
+					LogWrite( (nid<<3) + DOOR_NODE, 0, 0, dt->value);
 				}
 				
 				OS_EXIT_CRITICAL();			
@@ -210,7 +207,7 @@ void TimeTask(void *pdata)
 	struct tag_attrib *attr;
 	DATETIME *dt;
 	attr = (struct tag_attrib *)mbuf;
-	dt = (DATETIME *)mBuf;
+	dt = (DATETIME *)mbuf;
 	pdata = pdata;
 	while(1)
 	{	
@@ -237,7 +234,7 @@ void TimeTask(void *pdata)
 					at45db_Page_Read(GROUP_PAGE + i, ATTRIB_BA, mbuf, 8);
 					timecount[i].megnet_count = attr->megnet_delay;	
 					//read rtc
-					readRTC(dt);									
+					ReadRTC(dt);									
 					//write log
 					LogWrite( (i<<3) + MEGNET_NODE, ALARM_TYPE, 0, dt->value);
 
