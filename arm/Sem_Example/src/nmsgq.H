@@ -11,10 +11,8 @@ struct tag_nodemsg
 	uint8	data[1];
 };
 
-uint8 NMsgQCreate(void *Buf, 
-					uint32 SizeOfBuf
-					);
+uint8 NMsgQCreate(void *Buf, uint32 SizeOfBuf);
 uint8 NMsgQRead( struct tag_nodemsg *Ret, void *Buf);
-uint8 NMsgQWrite(void *Buf, struct tag_nodemsg *Ret);
+uint8 NMsgQWrite(struct tag_nodemsg *Ret, void *Buf);
 
 #endif
