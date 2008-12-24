@@ -25,9 +25,9 @@
 #include "config.h"
 #include "stdlib.h"
 
-#define	TaskStkLengh	64			// 定义用户任务0的堆栈长度
+#define	TaskStkLengh	128			// 定义用户任务0的堆栈长度
  
-OS_STK	TaskStk [TaskStkLengh];		// 定义用户任务0的堆栈
+OS_STK	MainStk [TaskStkLengh];		// 定义用户任务0的堆栈
 OS_STK	ComTaskStk [TaskStkLengh];		// 定义用户任务0的堆栈
 OS_STK	InputTaskStk[TaskStkLengh];	// 定义Task1的堆栈
 uint8	msgBuf[128];
@@ -55,7 +55,7 @@ int main (void)
 	
 
 	NMsgQCreate(msgBuf, sizeof(msgBuf));																								;
-	OSTaskCreate (mainTask,(void *)0, &TaskStk[TaskStkLengh - 1], 5);		
+	OSTaskCreate (mainTask,(void *)0, &MainStk[TaskStkLengh - 1], 2);		
 	OSStart ();
 	return 0;															
 }
@@ -121,12 +121,19 @@ void mainTask(void *pdata)
 	struct tag_nodemsg *msg;
 	struct tag_attrib *attr;
 	DATETIME *dt;
+	int i;
 	pdata = pdata;
 	dt = (DATETIME *)mbuf;
 	msg = (struct tag_nodemsg *)mbuf;
 	attr = (struct tag_attrib *)mbuf;
 	TargetInit();
-	OSTaskCreate (InputPinTask,(void *)0, &InputTaskStk[TaskStkLengh - 1], 8);	
+	for( i = 0; i < FULL_DOORS; i++ )
+	{
+		timecount[i].door_count = 0;
+		timecount[i].megnet_count = 0xff;
+			
+	}
+	OSTaskCreate (InputPinTask,(void *)0, &InputTaskStk[TaskStkLengh - 1], 3);	
 //	OSTaskCreate (PcLineTask,(void *)0, &ComTaskStk[TaskStkLengh - 1], 4);	
 	while(1)
 	{
@@ -193,6 +200,7 @@ void mainTask(void *pdata)
 				break;
 		
 		}
+		
 	}			
 }
 
@@ -228,7 +236,7 @@ void TimeTask(void *pdata)
 					timecount[i].megnet_count != 0x0)
 				{
 					timecount[i].megnet_count--;
-				}else if( timecount[i].megnet_count != 0x00 )
+				}else if( timecount[i].megnet_count == 0x00 )
 				{
 ;
 					at45db_Page_Read(GROUP_PAGE + i, ATTRIB_BA, mbuf, 8);

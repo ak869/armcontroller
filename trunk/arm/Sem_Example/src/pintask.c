@@ -29,7 +29,7 @@ void InputPinTask( void *pdata)
 		t = (pin_state ^ pin_prev_state);
 		for( i = 0; i < LOCAL_DOORS; i++ )
 		{
-			for( j = 0; i < IN_NODES; j++)
+			for( j = 0; j < IN_NODES; j++)
 			{
 				if( t & (1 << pin[i][j].bit) )
 				{
@@ -42,7 +42,7 @@ void InputPinTask( void *pdata)
 					{
 						msg->node = (j + (i << 3));
 						msg->msg = (pin_state >> pin[i][j].bit) & 0x1;
-						if( NMsgQWrite(msgBuf, msg) == QUEUE_OK )
+						if( NMsgQWrite(msg,msgBuf) == QUEUE_OK )
 							pin[i][j].state = 3;						
 					}
 				}
