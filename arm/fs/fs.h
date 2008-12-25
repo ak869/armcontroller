@@ -57,6 +57,7 @@ user	group
  
 
 #define ATTRIB_BA			504
+#define ATTRIB_SIZE			8
 
 #define GROUP_PAGE			3
 #define GROUP_SIZE			36

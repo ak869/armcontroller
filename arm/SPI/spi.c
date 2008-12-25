@@ -608,29 +608,7 @@ void SSP_Exception(void)
     
     }
 
-/*		    	temp = SSPSR;
-		    	t = (uint8 *)&id;
-		    	t += 3;
-			    while( i && SSP_RecvCount < SSP_SendSize )
-			    {    	
-			    	*t = SSPDR;
-			    	id >>= 8;
-			    	SSP_CompCount++;
-			    	if( SSP_CompCount == 4 )
-			    	{
-			    		if( id == SSP_CompVaule )
-			    		{
-			    			OSMboxPost(SSPReviceMbox,  (void *)(SSP_RecvBufPos + 1) );
-			    			SSPIMSC = 0;
-			    			goto Exit_SSP_Exception;
-			    		}
-			    		SSP_CompCount = 0;
-			    	}
-			    	SSP_RecvBufPos++;
-			    	SSP_RecvCount++;
-			    	i--;
-			    }
-*/			    
+		    
 
 Exit_SSP_Exception:
     VICVectAddr = 0;            // 通知中断控制器中断结束

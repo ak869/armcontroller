@@ -1,7 +1,35 @@
 #ifndef _SYSTEM_DEF_H
 #define _SYSTEM_DEF_H
 
+enum e_node
+{
+	door1 =	0,
+	megnet1,
+	exit1,
+	ctrl1,
+	reader1,
+	alarm1,
+	state1,
+	other1,
 
+	door2,
+	megnet2,
+	exit2,
+	ctrl2,
+	reader2,
+	alarm2,
+	state2,
+	other2,
+
+	reader_power	=	128,
+	net_module,
+	rtc,
+	flash,
+	
+	machine	=	254,
+
+	test	
+};
 
 
 #define MEGNET_NODE			0
@@ -36,5 +64,4 @@
 #define FULL_DOORS				16
 
 
-#define ALARM_TYPE				1
 #endif
