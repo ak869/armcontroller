@@ -35,11 +35,6 @@ uint8	msgBuf[128];
 
 
 /*
-void 	Task0(void *pdata);			// Task0 任务0
-void 	Task1(void *pdata);			// Task1 任务1
-*/
-
-/*
 **********************************************************************************************************
 ** 函数名称 ：main()
 ** 函数功能 ：uC/OS-II主函数，启动多任务环境。
@@ -82,7 +77,12 @@ struct tag_timecount
 	uint8 alarm_state	: 1;
 	uint8 reader_state	: 1;
 }timecount[FULL_DOORS];
-
+void PinInit(void)
+{	
+	IO1CLR = PIN_DOOR1;
+	IO1DIR |= PIN_DOOR1;
+		
+}
 void mainTask(void *pdata)
 {
 	uint8 err,t,ntype,nid;
@@ -95,10 +95,11 @@ void mainTask(void *pdata)
 	dt = (DATETIME *)mbuf;
 	msg = (struct tag_nodemsg *)mbuf;
 	attr = (struct tag_attrib *)mbuf;
+
 	TargetInit();
 	for( i = 0; i < FULL_DOORS; i++ )
 	{
-		timecount[i].door_count = 0;
+		timecount[i].door_count = 0xff;
 		timecount[i].megnet_count = 0xff;
 			
 	}
@@ -132,7 +133,7 @@ void mainTask(void *pdata)
 				t = (msg->msg & 0x1);
 				at45db_Page_Read(GROUP_PAGE + nid, ATTRIB_BA, mbuf, 8);			
 				OS_ENTER_CRITICAL();
-				if( t & attr->megnet )
+				if( t ^ attr->megnet )
 				{
 					//set megnet alarm					
 					timecount[nid].megnet_count = attr->megnet_delay;
@@ -157,8 +158,9 @@ void mainTask(void *pdata)
 						break;
 					}				
 				}			
-				if( t & attr->button )
+				if( t ^ attr->button )
 				{
+					IO1SET = PIN_DOOR1;
 					timecount[nid].door_count = attr->door_delay;
 					ReadRTC(dt);
 					LogWrite( (nid<<3) + DOOR_NODE, 0, 0, dt->value);
@@ -184,47 +186,49 @@ void TimeTask(void *pdata)
 	uint8 mbuf[8];
 	struct tag_attrib *attr;
 	DATETIME *dt;
+	struct tag_timecount * t;
 	attr = (struct tag_attrib *)mbuf;
 	dt = (DATETIME *)mbuf;
+	
 	pdata = pdata;
 	while(1)
 	{	
 		OS_ENTER_CRITICAL();	
 		for( i = 0; i < FULL_DOORS; i++ )
 		{
-			if( timecount[i].door_count != 0xff &&
-				timecount[i].door_count != 0x0 )
+			t = timecount + i;
+			if( t->door_count != 0xff &&
+				t->door_count != 0x0 )
 			{
-				timecount[i].door_count--;
+				t->door_count--;
 			}
-			else
+			else if( t->door_count == 0x0)
 			{
 				//close door
-				timecount[i].door_count = 0xff;
+				t->door_count = 0xff;
 				switch(i)
 				{
 					case 0:
-						IOSET = PIN_DOOR1;
+						IO1CLR = PIN_DOOR1;
 						break;
 					default:
 						break;	
-				}		
-								
-				if( timecount[i].megnet_count != 0xff &&  
-					timecount[i].megnet_count != 0x0)
-				{
-					timecount[i].megnet_count--;
-				}else if( timecount[i].megnet_count == 0x00 )
-				{
-					at45db_Page_Read(GROUP_PAGE + i, ATTRIB_BA, mbuf, 8);
-					timecount[i].megnet_count = attr->megnet_delay;	
-					//read rtc
-					ReadRTC(dt);									
-					//write log
-					LogWrite( (i<<3) + MEGNET_NODE, ALARM_TYPE, 0, dt->value);
-					
 				}						
 			}
+			if( t->megnet_count != 0xff &&  
+				t->megnet_count != 0x0 && 
+				t->door_count == 0xff )
+			{
+				t->megnet_count--;
+			}else if( t->megnet_count == 0x00 )
+			{
+				at45db_Page_Read(GROUP_PAGE + i, ATTRIB_BA, mbuf, 8);
+				t->megnet_count = attr->megnet_delay;	
+				//read rtc
+				ReadRTC(dt);									
+				//write log
+				LogWrite( (i<<3) + MEGNET_NODE, ALARM_TYPE, 0, dt->value);
+			}			
 		}
 		OS_EXIT_CRITICAL();	
 		OSTimeDly(200);
