@@ -25,11 +25,12 @@
 #include "config.h"
 #include "stdlib.h"
 
-#define	TaskStkLengh	128			// 定义用户任务0的堆栈长度
+#define	TaskStkLengh	64			// 定义用户任务0的堆栈长度
  
 OS_STK	MainStk [TaskStkLengh];		// 定义用户任务0的堆栈
 OS_STK	ComTaskStk [TaskStkLengh];		// 定义用户任务0的堆栈
 OS_STK	InputTaskStk[TaskStkLengh];	// 定义Task1的堆栈
+OS_STK	TimeTaskStk[TaskStkLengh];
 uint8	msgBuf[128];
 
 
@@ -47,6 +48,7 @@ void 	Task1(void *pdata);			// Task1 任务1
 void PcLineTask(void  *pdata);
 void InputPinTask(void  *pdata);
 void mainTask(void *pdata);
+void TimeTask(void *pdata);
 
 OS_EVENT *QEmptySem, *QFullSem;
 int main (void)
@@ -65,39 +67,6 @@ int main (void)
 **                     目标板初始化，创建Task1，向串口0发送字符串“I AM TASK A.”
 ********************************************************************************************************/
 
-enum e_node
-{
-	door1 =	0,
-	megnet1,
-	exit1,
-	ctrl1,
-	reader1,
-	alarm1,
-	state1,
-	other1,
-
-	door2,
-	megnet2,
-	exit2,
-	ctrl2,
-	reader2,
-	alarm2,
-	state2,
-	other2,
-
-	reader_power	=	128,
-	net_module,
-	rtc,
-	flash,
-	
-	machine	=	254,
-
-	test	
-};
-
-
-
-  
 
 
 struct tag_timecount
@@ -134,6 +103,7 @@ void mainTask(void *pdata)
 			
 	}
 	OSTaskCreate (InputPinTask,(void *)0, &InputTaskStk[TaskStkLengh - 1], 3);	
+	OSTaskCreate ( TimeTask,(void *)0, &TimeTaskStk[TaskStkLengh - 1],4);
 //	OSTaskCreate (PcLineTask,(void *)0, &ComTaskStk[TaskStkLengh - 1], 4);	
 	while(1)
 	{
@@ -222,30 +192,37 @@ void TimeTask(void *pdata)
 		OS_ENTER_CRITICAL();	
 		for( i = 0; i < FULL_DOORS; i++ )
 		{
-			if(timecount[i].door_count)
+			if( timecount[i].door_count != 0xff &&
+				timecount[i].door_count != 0x0 )
 			{
 				timecount[i].door_count--;
 			}
 			else
 			{
 				//close door
-				
-				IOSET = PIN_DOOR1;
-				
+				timecount[i].door_count = 0xff;
+				switch(i)
+				{
+					case 0:
+						IOSET = PIN_DOOR1;
+						break;
+					default:
+						break;	
+				}		
+								
 				if( timecount[i].megnet_count != 0xff &&  
 					timecount[i].megnet_count != 0x0)
 				{
 					timecount[i].megnet_count--;
 				}else if( timecount[i].megnet_count == 0x00 )
 				{
-;
 					at45db_Page_Read(GROUP_PAGE + i, ATTRIB_BA, mbuf, 8);
 					timecount[i].megnet_count = attr->megnet_delay;	
 					//read rtc
 					ReadRTC(dt);									
 					//write log
 					LogWrite( (i<<3) + MEGNET_NODE, ALARM_TYPE, 0, dt->value);
-
+					
 				}						
 			}
 		}
