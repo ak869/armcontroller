@@ -1,7 +1,7 @@
 #ifndef _PIN_DEF_H
 #define _PIN_DEF_H
 
-#define PIN_DOOR1_BIT	25
+#define PIN_DOOR1_BIT		25
 
 #define PIN_MEGNET1_BIT		21
 #define PIN_EXIT1_BIT		16
