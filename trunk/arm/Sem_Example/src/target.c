@@ -192,6 +192,7 @@
 {
     OS_ENTER_CRITICAL();
     srand((uint32) TargetInit);
+    PinInit();
     VICInit();
     Timer0Init();
     UART0Init(9600);

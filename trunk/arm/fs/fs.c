@@ -3,8 +3,7 @@
 
 static uint32 log_id;
 static uint16 curr_pa;
-#define DEVICE_TYPE		0x01234567
-#define DEVICE_VER		0x00001001
+
 uint8 calc_crc(uint8 * buf, int nSize)
 {
 	uint8 chk;
@@ -55,7 +54,7 @@ void FormatFlash(void)
 			at45db_Buffer_Write(2, ba, buf, DOOR_STATE_SIZE);
 			ba += DOOR_STATE_SIZE;
 		}
-		if( ba >= 528 )
+		if( ba >= 512 )
 		{
 			at45db_BuffertoPageNoErase(2, pa);
 			pa++;
@@ -68,14 +67,14 @@ void FormatFlash(void)
 	for( j = 0; j < FULL_DOORS; j++)
 	{
 	//attrib
-		pattr->megnet = 0;
-		pattr->button = 0;
+		pattr->megnet = 1;
+		pattr->button = 1;
 		pattr->feedback = 1;
-		pattr->alarm = 0;
-		pattr->other = 0;
+		pattr->alarm = 1;
+		pattr->other = 1;
 		pattr->door_submarine = 0;
 		pattr->reserved = 0;	
-		pattr->link = 0;
+		pattr->link = 0xff;
 		pattr->door_delay = 6;
 		pattr->megnet_delay = 6;
 		pattr->card_delay = 20;
@@ -100,7 +99,7 @@ void FormatFlash(void)
 			pgroup->param = 0;
 			pgroup->power = 100;
 			buf[GROUP_SIZE - 1] = calc_crc(buf, GROUP_SIZE - 1);
-			if( i == 7 )
+			if( x == 13 )
 				at45db_Buffer_Write(2, ba, buf, GROUP_SIZE + ATTRIB_SIZE );
 			else
 				at45db_Buffer_Write(2, ba, buf, GROUP_SIZE );
@@ -118,9 +117,8 @@ void FsInit(void)
 {
 	uint32 ver;
 	at45db_Page_Read( LOG_PAGE - 1, 0, (uint8*)&ver, sizeof(ver) );
-	if( ver != DEVICE_TYPE )
+//	if( ver != DEVICE_TYPE )
 	{
-		at45db_ChipErase();
 		FormatFlash();
 		ver = DEVICE_TYPE;
 		at45db_BufferWrite_PageProg(2,LOG_PAGE - 1, 0, (uint8*)&ver, sizeof(ver) );

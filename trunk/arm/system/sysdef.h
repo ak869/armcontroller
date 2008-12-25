@@ -1,6 +1,6 @@
 #ifndef _SYSTEM_DEF_H
 #define _SYSTEM_DEF_H
-
+/*
 enum e_node
 {
 	door1 =	0,
@@ -30,7 +30,9 @@ enum e_node
 
 	test	
 };
-
+*/
+#define DEVICE_TYPE		0x01234568
+#define DEVICE_VER		0x00001001
 
 #define MEGNET_NODE			0
 #define EXIT_NODE			1

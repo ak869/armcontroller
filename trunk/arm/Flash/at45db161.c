@@ -165,7 +165,7 @@ void at45db_Comp_uint32(uint16 pa,uint16 ba, uint32 id, int nSize, uint16 *empty
 	id8 +=3;
 	SSPDR = 0x03;
 	SSPDR = (uint8)(pa >> 6);
-	SSPDR = (uint8)(pa << 2) + (uint8)(ba >> 8);
+	SSPDR = (uint8)(pa << 2) + ((uint8)(ba >> 8) & 0x3) ;
 	SSPDR = (uint8)ba;
 	
 	j = 0;
@@ -224,7 +224,7 @@ void at45db_Page_Read(uint16 pa,uint16 ba, uint8* buf, int nSize)
 
 	SSPDR = 0x03;
 	SSPDR = (uint8)(pa >> 6);
-	SSPDR = (uint8)(pa << 2) + (uint8)(ba >> 8);
+	SSPDR = (uint8)(pa << 2) + ((uint8)(ba >> 8) & 0x3);
 	SSPDR = (uint8)ba;
 
 	j = 0;
