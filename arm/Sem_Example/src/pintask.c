@@ -8,8 +8,6 @@ static struct tag_inpin
 	uint32  bit		:	5;		
 }pin[LOCAL_DOORS][IN_NODES] = {{{0,PIN_MEGNET1_BIT},{0,PIN_EXIT1_BIT}}};//,{0,PIN_MEGNET1_BIT},{0,PIN_MEGNET1_BIT},
 
-
-
 void InputPinTask( void *pdata)
 {
 	uint32 pin_state,pin_prev_state, t;
