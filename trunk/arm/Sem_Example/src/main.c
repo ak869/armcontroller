@@ -31,7 +31,7 @@ OS_STK	MainStk [TaskStkLengh];		// 定义用户任务0的堆栈
 OS_STK	ComTaskStk [TaskStkLengh];		// 定义用户任务0的堆栈
 OS_STK	InputTaskStk[TaskStkLengh];	// 定义Task1的堆栈
 OS_STK	TimeTaskStk[TaskStkLengh];
-uint8	msgBuf[128];
+
 
 
 /*
@@ -45,13 +45,13 @@ void InputPinTask(void  *pdata);
 void mainTask(void *pdata);
 void TimeTask(void *pdata);
 
-OS_EVENT *QEmptySem, *QFullSem;
+OS_EVENT *QNoEmptySem, *QFullSem;
 int main (void)
 {
 	OSInit ();
 	
 
-	NMsgQCreate(msgBuf, sizeof(msgBuf));																								;
+	QNoEmptySem = OSSemCreate(0);																								;
 	OSTaskCreate (mainTask,(void *)0, &MainStk[TaskStkLengh - 1], 2);		
 	OSStart ();
 	return 0;															
@@ -87,13 +87,13 @@ void mainTask(void *pdata)
 {
 	uint8 err,t,ntype,nid;
 	uint8 mbuf[8];
-	struct tag_nodemsg *msg;
+	PNODEMSG msg;
 	struct tag_attrib *attr;
 	DATETIME *dt;
 	int i;
 	pdata = pdata;
 	dt = (DATETIME *)mbuf;
-	msg = (struct tag_nodemsg *)mbuf;
+	msg = (PNODEMSG)mbuf;
 	attr = (struct tag_attrib *)mbuf;
 
 	TargetInit();
@@ -108,17 +108,18 @@ void mainTask(void *pdata)
 //	OSTaskCreate (PcLineTask,(void *)0, &ComTaskStk[TaskStkLengh - 1], 4);	
 	while(1)
 	{
-		msg->size = 6;
-		NMsgQRead( msg, msgBuf);
-		ntype = msg->node & 0x7;
-		nid = (msg->node >> 3);
+		OSSemPend(QNoEmptySem, 0, &err);
+		msg->bits.size = 6;
+		NMsgQRead( msg, 0,0);
+		ntype = msg->bits.node & 0x7;
+		nid = (msg->bits.node >> 3);
 		switch( ntype )
 		{
 			case READERDATA_NODE:
 				{
 					uint16 empty_p,exist_p;
 					struct tag_userinfo *info = (struct tag_userinfo *)mbuf;
-					at45db_Comp_uint32( USER_ID_PAGE, 0, *((uint32 *)msg->data) , (USER_ID_NUMBER * USER_ID_SIZE), &empty_p, &exist_p );
+					at45db_Comp_uint32( USER_ID_PAGE, 0, *((uint32 *)msg->bits.data) , (USER_ID_NUMBER * USER_ID_SIZE), &empty_p, &exist_p );
 					if( exist_p == (USER_ID_NUMBER * USER_ID_SIZE) )
 					{
 						// no enroll id;
@@ -130,7 +131,7 @@ void mainTask(void *pdata)
 				}
 				break;
 			case MEGNET_NODE:
-				t = (msg->msg & 0x1);
+				t = (msg->bits.msg & 0x1);
 				at45db_Page_Read(GROUP_PAGE + nid, ATTRIB_BA, mbuf, 8);			
 				OS_ENTER_CRITICAL();
 				if( t ^ attr->megnet )
@@ -147,7 +148,7 @@ void mainTask(void *pdata)
 				OS_EXIT_CRITICAL();			
 				break;
 			case EXIT_NODE:			
-				t = (msg->msg & 0x1);
+				t = (msg->bits.msg & 0x1);
 				at45db_Page_Read(GROUP_PAGE + nid, ATTRIB_BA, mbuf, 8);
 				OS_ENTER_CRITICAL();
 				if( attr->link < 16  )
@@ -175,10 +176,6 @@ void mainTask(void *pdata)
 		
 	}			
 }
-
-
-
-
 
 void TimeTask(void *pdata)
 {
