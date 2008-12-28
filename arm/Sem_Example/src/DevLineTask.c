@@ -1,9 +1,9 @@
 #include "config.h"
 #include "com.h"
 
-uint8 uart_buf[256];
-
-void PcLineTask(void  *pdata)
+static uint8 uart_buf[256];
+#define SECONDPREBYTE	1	// (1000 * 10 / 9600)
+void DevLineTask(void  *pdata)
 {
 	int i,n;
 	uint8 chk,cmd,t,test;
@@ -14,38 +14,47 @@ void PcLineTask(void  *pdata)
 	
 	while(1)
 	{
-StartWhile:	
+StartWhile:
 		chk = 0;
+		/*
+			等待总线空闲		
+		*/
 		UART0RXLineClear();
+		/*
+			开始接受接受数据，协议分析
+		*/
 		t = UART0Getch();
 		if( t != PLT_VERSION )
 			continue;
-		uart_buf[0] = t;
+		uart_buf[0] = t;	
 		chk = 0;			
 		for( i = 1; i < 8; i++ )
 		{
 	   		t = UART0GetchForWait(&err);
 		   	if( err != OS_NO_ERR )
-		   			goto StartWhile;
+		   			goto StartWhile;		//超时
 			chk ^= t;
 			uart_buf[i] = t;
-		}		
+		}
 		if( chk )
-			continue;
-		
+			continue;						//校验错误		
+
+		/*
+			为命令包，为本机地址，有数据包继续接受
+						不是，又有数据包跳空接受
+			为应答包，跳空接受
+		*/
+
 		cmd = uart_buf[CMD_CMD];
-		if( uart_buf[CMD_ADDR] != MACHINE_NO )
-		{
-			if(  cmd & 0x40 )
-			{
-			//close uart recv interrupt
+		if( cmd & 0x80 || uart_buf[CMD_ADDR] != MACHINE_NO)
+		{//为应答包
+			if( cmd & 0x40 )
+			{//有数据包
 				t = uart_buf[CMD_P1];
-				OSTimeDly( (t + 4 + 3) / 5 ); 	//5ms
-			//open uart recv interrupt
+				OSTimeDly( (t + 2) / 5 ); 	//为9600 一个字节为1ms
 			}
 			continue;
-		}	
-
+		}
 	   
 	   if(  cmd & 0x40 )
 	   {
@@ -53,10 +62,10 @@ StartWhile:
 	   		t = UART0GetchForWait(&err);
 	   		
 	   		if( err != OS_NO_ERR )
-	   			goto StartWhile;
+	   			continue;
 	   			
 	   		if( t != PLT_VERSION )
-	   			goto StartWhile;
+	   			continue;
 	   			   			
 	   		uart_buf[DATA_PACK_FLAG] = t;
 
@@ -72,7 +81,9 @@ StartWhile:
 	   		if( chk )
 	   			continue;	   		
 	   }
-
+		/*
+			处理协议		
+		*/
 				   		
 /*解析命令*/
 		switch( cmd )

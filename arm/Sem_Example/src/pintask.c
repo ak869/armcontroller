@@ -1,7 +1,7 @@
 #include "config.h"
-extern uint8	msgBuf[128];
-#define PIN_IN_MASK (PIN_MEGNET1 |  PIN_EXIT1 | PIN_MEGNET2 | PIN_EXIT2 )
 
+#define PIN_IN_MASK (PIN_MEGNET1 |  PIN_EXIT1 | PIN_MEGNET2 | PIN_EXIT2 )
+extern OS_EVENT *QNoEmptySem;
 static struct tag_inpin
 {
 	uint8	state	: 	3;
@@ -13,9 +13,9 @@ void InputPinTask( void *pdata)
 	uint32 pin_state,pin_prev_state, t;
 	uint8 mbuf[2];
 	int i,j;
-	struct tag_nodemsg *msg;
-	msg = (struct tag_nodemsg *)mbuf;	
-	msg->size = 2;
+	PNODEMSG msg;
+	msg = (PNODEMSG)mbuf;	
+	msg->bits.size = 2;
 
 	pdata = pdata;
 	pin_prev_state = pin_state = IOPIN;	
@@ -38,10 +38,13 @@ void InputPinTask( void *pdata)
 						pin[i][j].state++;
 					else if( pin[i][j].state == 2 )
 					{
-						msg->node = (j + (i << 3));
-						msg->msg = (pin_state >> pin[i][j].bit) & 0x1;
-						if( NMsgQWrite(msg,msgBuf) == QUEUE_OK )
-							pin[i][j].state = 3;						
+						msg->bits.node = (j + (i << 3));
+						msg->bits.msg = (pin_state >> pin[i][j].bit) & 0x1;
+						if( NMsgQWrite(msg) == QUEUE_OK )
+						{
+							OSSemPost(QNoEmptySem);
+							pin[i][j].state = 3;
+						}						
 					}
 				}
 			
