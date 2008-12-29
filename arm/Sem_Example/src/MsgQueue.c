@@ -41,7 +41,7 @@ uint8 NMsgQWrite( PNODEMSG Val )
 	uint32 m,mask;
 	nSize = (Val->bits.size >> 2);
 	if( nSize == 0 )
-		return FALSE;
+		return NOT_OK;
 	mask = (1 << nSize) - 1;
 	map = MsgQueue.map;
 	OS_ENTER_CRITICAL();
@@ -99,26 +99,25 @@ uint8 NMsgQWrite( PNODEMSG Val )
 		}
 	}
 	OS_EXIT_CRITICAL();
-	return FALSE;
+	return QUEUE_FULL;
 map_exit:
 	for( i = 0; i < nSize; i++ )
 	{
 		MsgQueue.buf[id + i] = Val->value[i];
 	}
-	if( MsgQueue.in != 0x3ff )
+	if( MsgQueue.NData )
 	{
-		MSG_NODE(MsgQueue.in)->bits.next = id;
-		MSG_NODE(id)->bits.next = 0x3ff;
-		MsgQueue.in = id;
-	}else
+		MSG_NODE(MsgQueue.in)->bits.next = id;		
+	}
+	if( MsgQueue.out == 0x3ff )
 	{
-		MSG_NODE(id)->bits.next = 0x3ff;
-		MsgQueue.in = id;
 		MsgQueue.out = id;
 	}
+	MSG_NODE(id)->bits.next = 0x3ff;
+	MsgQueue.in = id;
 	MsgQueue.NData++;
 	OS_EXIT_CRITICAL();
-	return TRUE;
+	return QUEUE_OK;
 }
 
 uint8 NMsgQRead( PNODEMSG Ret,uint8 node, uint8 node_mask )
@@ -134,7 +133,7 @@ uint8 NMsgQRead( PNODEMSG Ret,uint8 node, uint8 node_mask )
 
 	nSize = (Ret->bits.size >> 2);
 	if( nSize == 0 )
-		return FALSE;
+		return NOT_OK;
 	ret = FALSE;
 	tsk = GetOSPrioCur();
 	OS_ENTER_CRITICAL();
@@ -155,7 +154,7 @@ uint8 NMsgQRead( PNODEMSG Ret,uint8 node, uint8 node_mask )
 			{
 				nSize = t->bits.size;
 				if( nSize > Ret->bits.size )
-					return FALSE;
+					return QUEUE_EMPTY;
 
 				if( prev == NULL )
 				{
@@ -174,7 +173,7 @@ uint8 NMsgQRead( PNODEMSG Ret,uint8 node, uint8 node_mask )
 				
 				mask = (1 << nSize ) - 1;
 				m = MsgQueue.map[id >> 4];
-				m += ( MsgQueue.map[(id >> 4) + 1] << 16 );
+				m |= ( MsgQueue.map[(id >> 4) + 1] << 16 );
 				m &= ~(mask << (id & MAP_BIT_MASK));
 				MsgQueue.map[id >> 4] = m;
 				MsgQueue.map[(id >> 4) + 1] = (m >> 16);
@@ -185,7 +184,7 @@ uint8 NMsgQRead( PNODEMSG Ret,uint8 node, uint8 node_mask )
 		if( id != 0x3ff )
 		{
 			MsgQueue.NData--;
-			ret = TRUE;
+			ret = QUEUE_OK;
 		}
 	}
 	OS_EXIT_CRITICAL();

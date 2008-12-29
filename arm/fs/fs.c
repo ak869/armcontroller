@@ -117,7 +117,7 @@ void FsInit(void)
 {
 	uint32 ver;
 	at45db_Page_Read( LOG_PAGE - 1, 0, (uint8*)&ver, sizeof(ver) );
-//	if( ver != DEVICE_TYPE )
+	if( ver != DEVICE_TYPE )
 	{
 		FormatFlash();
 		ver = DEVICE_TYPE;
@@ -133,7 +133,7 @@ void FsInit(void)
 	}
 */	
 }
-
+uint8 tempbuf[528];
 void LogInit(void)
 {
 	uint16 pa;
@@ -158,6 +158,9 @@ void LogInit(void)
 		if( log_id > id || id == 0xffffffff )
 		{
 			max_pa = pa;
+		}else if( id == log_id )
+		{
+			break;
 		}else
 		{
 			log_id = id;
@@ -167,6 +170,7 @@ void LogInit(void)
 	
 	max_pa = (528 - 1) >> 4;
 	min_pa = 0;
+	
 	while( min_pa != max_pa )
 	{
 		ba = ( (max_pa - min_pa) >> 1 ) + min_pa;
@@ -174,7 +178,11 @@ void LogInit(void)
 		if( id == 0xffffffff )
 		{
 			max_pa = ba;
-		}else
+		}else if( log_id == id )
+		{
+			break;
+		}
+		else
 		{
 			log_id = id;
 			min_pa = ba;
@@ -183,7 +191,16 @@ void LogInit(void)
 	
 	if( log_id == 0xffffffff )
 		log_id = 0;
-	curr_pa =( pa & 0x0000ff80 );
+	else
+		log_id++;
+	curr_pa = log_id / 33;
+	curr_pa %= (MAX_PAGE_COUNT - LOG_PAGE);
+	if( curr_pa != pa )
+	{
+		at45db_PageErase(curr_pa);
+	}
+	at45db_PagetoBuffer(2, curr_pa);
+
 }
 void LogWrite(uint8 node, uint8 type, uint32 userid, uint32 ntime)
 {
@@ -207,18 +224,21 @@ void LogWrite(uint8 node, uint8 type, uint32 userid, uint32 ntime)
 	log.crc = chk;
 	
 	//write flash
-	ba = log_id % 528;
-	pa = log_id / 528;
-	pa /= (MAX_PAGE_COUNT - LOG_PAGE);
+	ba = (log_id % 33) << 4;
+	pa = log_id / 33;
+	pa %= (MAX_PAGE_COUNT - LOG_PAGE);
 	
 	pa += LOG_PAGE;
-
-	if( (pa & 0x0000ff80) != curr_pa )
+	at45db_Page_Read( pa, 0, tempbuf, 528 );
+	if( pa != curr_pa )
 	{
-		at45db_BlockErase((uint16)pa);
-		curr_pa =( pa & 0x0000ff80 );
-	}	
-	at45db_BufferWrite_PageProg(2, pa, ba, (uint8*)&log, 16);	
+		at45db_PageErase((uint16)pa);
+		curr_pa = pa;
+		at45db_PagetoBuffer(2, pa);
+	}
+	at45db_Buffer_Write( 2, ba, (uint8*)&log, 16 );
+	at45db_BuffertoPageNoErase( 2, pa);
+	at45db_Page_Read( pa, 0, tempbuf, 528 );
 	log_id++;	
 }
 

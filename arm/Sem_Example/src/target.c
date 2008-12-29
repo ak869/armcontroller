@@ -200,7 +200,7 @@
     FlashInit();
     RTCInit();
     FsInit();
-    LogInit();    
+    LogInit();   
     OS_EXIT_CRITICAL();
 }
 
