@@ -109,7 +109,7 @@ void mainTask(void *pdata)
 	while(1)
 	{
 		OSSemPend(QNoEmptySem, 0, &err);
-		msg->bits.size = 6;
+		msg->bits.size = 8;
 		NMsgQRead( msg, 0,0);
 		ntype = msg->bits.node & 0x7;
 		nid = (msg->bits.node >> 3);

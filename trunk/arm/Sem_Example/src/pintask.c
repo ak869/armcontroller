@@ -15,7 +15,7 @@ void InputPinTask( void *pdata)
 	int i,j;
 	PNODEMSG msg;
 	msg = (PNODEMSG)mbuf;	
-	msg->bits.size = 2;
+	msg->bits.size = 4;
 
 	pdata = pdata;
 	pin_prev_state = pin_state = IOPIN;	
@@ -40,6 +40,7 @@ void InputPinTask( void *pdata)
 					{
 						msg->bits.node = (j + (i << 3));
 						msg->bits.msg = (pin_state >> pin[i][j].bit) & 0x1;
+						msg->bits.task = 2;
 						if( NMsgQWrite(msg) == QUEUE_OK )
 						{
 							OSSemPost(QNoEmptySem);
