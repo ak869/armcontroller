@@ -25,11 +25,11 @@
 **------------------------------------------------------------------------------------------------------
 ********************************************************************************************************/
 
-#define UART0_FIFO_LENGTH         16
+#define UART1_FIFO_LENGTH         16
 
-#ifndef IN_UART0
-
-extern uint8 UART0Init(uint32 bps);
+#ifndef IN_UART1
+#define IN_UART1
+extern uint8 UART1Init(uint32 bps);
 /*********************************************************************************************************
 ** 函数名称: UART0Init
 ** 功能描述: 初始化UART0 
@@ -41,7 +41,7 @@ extern uint8 UART0Init(uint32 bps);
 ** 调用模块: QueueCreate,OSSemCreate
 ********************************************************************************************************/
 
-extern void UART0Putch(uint8 Data);
+extern void UART1Putch(uint8 Data);
 /*********************************************************************************************************
 ** 函数名称: UART0Putch
 ** 功能描述: 发送一个字节数据 
@@ -51,7 +51,7 @@ extern void UART0Putch(uint8 Data);
 ** 调用模块: QueueWrite,QueueRead
 ********************************************************************************************************/
         
-extern void UART0Write(uint8 *Data, uint16 NByte);
+extern void UART1Write(uint8 *Data, uint16 NByte);
 /*********************************************************************************************************
 ** 函数名称: UART0Write
 ** 功能描述: 发送多个字节数据 
@@ -62,9 +62,9 @@ extern void UART0Write(uint8 *Data, uint16 NByte);
 ** 调用模块: UART0Putch
 ********************************************************************************************************/
 
-extern uint8 UART0Getch(void);
-extern void UART0RXLineClear(void);
-extern uint8 UART0GetchForWait(uint8 *err);      
+extern uint8 UART1Getch(void);
+//extern void UART0RXLineClear(void);
+extern uint8 UART1GetchForWait(uint8 time, uint8 *err);      
 /*********************************************************************************************************
 ** 函数名称: UART0Getch
 ** 功能描述: 接收一个字节数据
@@ -74,7 +74,7 @@ extern uint8 UART0GetchForWait(uint8 *err);
 ** 调用模块: OSSemPend
 ********************************************************************************************************/
 
-extern void UART0_Exception(void);
+extern void UART1_Exception(void);
 /*********************************************************************************************************
 ** 函数名称: UART0_Exception
 ** 功能描述: UART0中断服务程序
@@ -88,7 +88,7 @@ extern void UART0_Exception(void);
 
 #endif
 
-#define UART0_SEND_QUEUE_LENGTH   60    /* 给UART0发送数据队列分配的空间大小 */
+#define UART1_SEND_QUEUE_LENGTH   40    /* 给UART0发送数据队列分配的空间大小 */
 /*********************************************************************************************************
 **                            End Of File
 ********************************************************************************************************/

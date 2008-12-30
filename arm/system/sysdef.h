@@ -41,6 +41,7 @@ enum e_node
 #define READERDATA_NODE		4
 #define DOOR_NODE			5
 #define	CTRL_NODE			6
+
 #define EXT_NODE			7
 
 #define IN_NODES			2

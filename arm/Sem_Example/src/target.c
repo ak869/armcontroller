@@ -196,6 +196,7 @@
     VICInit();
     Timer0Init();
     UART0Init(9600);
+    UART1Init(9600);
     SSPInit(2);
     FlashInit();
     RTCInit();
