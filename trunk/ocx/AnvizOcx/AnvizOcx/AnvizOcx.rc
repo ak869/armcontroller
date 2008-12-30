@@ -44,7 +44,7 @@ IDR_USERS               REGISTRY                "Users.rgs"
 IDR_DEVICELOG           REGISTRY                "DeviceLog.rgs"
 IDR_DEVICELOGS          REGISTRY                "DeviceLogs.rgs"
 IDR_BUSPORTDATA         REGISTRY                "BusPortData.rgs"
-IDR_BUSPORTDATA1        REGISTRY                "busportd.bin"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
