@@ -2,7 +2,10 @@
 extern HANDLE p;
 extern struct  tag_machine
 {
-	unsigned char node;
+	unsigned char node  : 3;
+	unsigned char size	: 3;		/* 0 - 6 为长度，7为扩展*/
+	unsigned char datapack	: 1;
+	unsigned char dir		: 1;
     unsigned char data[4];
 }machine[14];
 CDlg::CDlg(void)
@@ -98,6 +101,15 @@ DWORD CDlg::DialogParam(UINT uMsg, WPARAM wParam, LPARAM lParam)
 						  SetEvent(EventExit);
 						  EndDialog(m_hWnd, 0);
 						  break;
+					  case IDC_WEIGAND1:
+						  OnWeigandButton(0);
+						  break;
+					  case IDC_BUTTON1:
+						  OnExitButton(0);
+						  break;
+					  case IDC_MEGNET1:
+						  OnMegnetButton(0);
+						  break;
 				  }
 				  break;
 			  case WM_CLOSE:
@@ -114,4 +126,61 @@ void CDlg::Unlock(void)
 	{
 		
 		m_Lock = 0;
+	}
+
+void CDlg::OnWeigandButton(int id)
+	{
+		DWORD val;
+		BOOL  bret;
+		val = ::GetDlgItemInt(m_hWnd, IDC_USERID1 + id, &bret, FALSE);
+		WaitForSingleObject(p,INFINITE);
+//		if( machine[addr].node != 0xff )
+		{
+			machine[id].size = 4;
+			machine[id].dir = 1;
+			machine[id].datapack = 0;
+			machine[id].node = 4;
+			machine[id].data[0] = val&0xff;
+			machine[id].data[1] = (val >> 8);
+			machine[id].data[2] = (val >> 16);
+			machine[id].data[3] = (val >> 24);	
+		}
+		SetEvent(p);
+	}
+
+void CDlg::OnExitButton(int id)
+	{
+		WaitForSingleObject(p,INFINITE);
+		{
+ 			machine[id].size = 1;
+			machine[id].dir = 1;
+			machine[id].datapack = 0;
+			machine[id].node = 1;
+			machine[id].data[0] = 0;
+		}
+		SetEvent(p);
+	}
+
+void CDlg::OnMegnetButton(int id)
+	{
+		WaitForSingleObject(p,INFINITE);
+		{
+ 			machine[id].size = 1;
+			machine[id].dir = 1;
+			machine[id].datapack = 0;
+			machine[id].node = 0;
+			machine[id].data[0] = 0;
+		}
+		SetEvent(p);
+	}
+
+void CDlg::OnOpenDoor(int id)
+	{
+		 CheckDlgButton(m_hWnd, IDC_DOOR1+id, BST_CHECKED);
+	}
+
+
+void CDlg::OnCloseDoor(int id)
+	{
+		CheckDlgButton(m_hWnd, IDC_DOOR1+id, BST_UNCHECKED);
 	}

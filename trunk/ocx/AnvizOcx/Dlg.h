@@ -16,4 +16,9 @@ class CDlg
 		CDlg(void);
 		~CDlg(void);
 		void Unlock(void);
+		void OnWeigandButton(int id);
+		void OnExitButton(int id);
+		void OnMegnetButton(int id);
+		void OnOpenDoor(int id);
+		void OnCloseDoor(int id);
 	};
