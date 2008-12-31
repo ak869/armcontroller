@@ -6,7 +6,10 @@
 HANDLE p;
 struct  tag_machine
 {
-	unsigned char node;
+	unsigned char node  : 3;
+	unsigned char size	: 3;		/* 0 - 6 为长度，7为扩展*/
+	unsigned char datapack	: 1;
+	unsigned char dir		: 1;
     unsigned char data[4];
 }machine[14];
 
@@ -51,6 +54,7 @@ DWORD WINAPI ComThread( LPVOID lpParameter )
 							buf[3] = machine[addr].data[1];
 							buf[4] = machine[addr].data[2];
 							buf[5] = machine[addr].data[3];							
+							machine[addr].node = 0xff;
 						}
 						SetEvent(p);
 						chk = 0;
