@@ -16,8 +16,7 @@ extern OS_EVENT *QNoEmptySem;
 /*  
 host send
 	2:0 -> node
-	4:3 -> size
-	5	-> ext_cmd
+	5:3 -> size	(7:ext_cmd)
 	6   -> x	
 	7	-> token 0
 
@@ -29,8 +28,7 @@ ext_ack		01xxxxxxb
 	
 device send
 	2:0 -> node
-	4:3 -> size
-	5	-> ext_cmd	
+	5:3 -> size (7:ext_cmd)
 	6	-> x
 	7   -> ack	1
 ext_cmd		
