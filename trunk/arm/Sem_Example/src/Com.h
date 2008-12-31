@@ -8,11 +8,11 @@
 P1		:nSize;
 P2 - P4 :Flash addr
 */
-#define GETLONGDATA				0x01		//Short
-#define SETLONGDATA				0x42		//Long
-#define SETBYTEDATA				0x03		//Short
-#define SETBITDATA				0x04		//Short
-#define ESAREFLASH				0x05
+#define GETLONGDATA				0x39		//Short
+#define SETLONGDATA				0x4a		//Long
+#define SETBYTEDATA				003b	//	Short
+#define SETBITDATA				0x3c		//Short
+#define ESAREFLASH				0x3d
 
 //TIME opertion
 #define SETDATETIME				0x46		//Long
