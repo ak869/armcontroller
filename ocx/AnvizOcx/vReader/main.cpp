@@ -4,21 +4,16 @@
 #include "..\AnvizOcx\ProtocolTest\ComPort.h"
 
 HANDLE p;
-struct  tag_machine
-{
-	unsigned char node  : 3;
-	unsigned char size	: 3;		/* 0 - 6 为长度，7为扩展*/
-	unsigned char datapack	: 1;
-	unsigned char dir		: 1;
-    unsigned char data[4];
-}machine[14];
+struct  tag_machine machine[14];
+DWORD StartTime;
 
 DWORD WINAPI ComThread( LPVOID lpParameter )
 	{
 		CDlg *d;
 		CComPort port;
 		int nSize, i;
-		UCHAR buf[256],chk,addr;
+		UCHAR buf[256],chk,addr, *b;
+		struct  tag_machine *t;
 		d = (CDlg *)lpParameter;
 		if( !port.OpenCom( _TEXT("COM1") ) )
 			{
@@ -26,9 +21,9 @@ DWORD WINAPI ComThread( LPVOID lpParameter )
 				return 0;
 			}
 		 port.SetTimeOut(80);
-//		 PostMessage( d->m_hWnd,(WM_USER+1), 0, NULL);
 		 d->Unlock();
-		 while( WaitForSingleObject(d->EventExit,0) != WAIT_TIMEOUT )
+		 StartTime = GetTickCount();
+		 while( WaitForSingleObject(d->EventExit,0) == WAIT_TIMEOUT )
 		 {
 			nSize = 256;
 			port.ReadData(buf, (DWORD*)&nSize);
@@ -46,24 +41,51 @@ DWORD WINAPI ComThread( LPVOID lpParameter )
 					addr = buf[6];
 					if( addr < 16 && addr >=2 )
 					{
-						WaitForSingleObject(p,INFINITE);
-						if( machine[addr].node != 0xff )
+						addr -= 2;
+						t = (struct  tag_machine *)(buf + 1);
+						if( t->size != 0 )
 						{
-							buf[1] = machine[addr].node;
-							buf[2] = machine[addr].data[0];
-							buf[3] = machine[addr].data[1];
-							buf[4] = machine[addr].data[2];
-							buf[5] = machine[addr].data[3];							
-							machine[addr].node = 0xff;
+							switch( t->node )
+							{
+							case DOOR_NODE:
+								if( t->data[0] == 1 )
+								{
+									d->OnOpenDoor(addr);
+								}else
+									d->OnCloseDoor(addr);
+								break;
+							}											
+						}
+						buf[1] = 0;
+						buf[2] = 0;
+						buf[3] = 0;
+						buf[4] = 0;
+						buf[5] = 0;
+						WaitForSingleObject(p,INFINITE);
+						machine[addr].Count++;
+						if( machine[addr].size != 0 )
+						{
+							b = (BYTE *)(machine + addr);
+							machine[addr].datapack = 0;							
+							buf[1] = b[0];
+							buf[2] = b[1];
+							buf[3] = b[2];
+							buf[4] = b[3];
+							buf[5] = b[4];
+							machine[addr].SendTime = GetTickCount();
+							machine[addr].size = 0;
 						}
 						SetEvent(p);
+						buf[1] |= 0x80;
+
 						chk = 0;
 						for( i = 1; i < 7; i++ )
 						{
 							chk ^= buf[i];	
 						}
 						buf[i] = chk;
-						port.WriteData( buf, 8 );						
+						port.WriteData( buf, 8 );
+						chk = 0;
 					}				
 				}
 			}
@@ -78,8 +100,15 @@ int APIENTRY WinMain(HINSTANCE hInstance,
                      int       nCmdShow)
 	{
 	   CDlg d;
+	   int i;
 	   HANDLE hThread;
 	   DWORD dwThreadID;
+		for( i = 0; i < 14; i++ )
+		{
+			machine[i].size = 0;
+			machine[i].Count = 0;
+		}
+
 	   p = CreateEvent(NULL,FALSE,TRUE,NULL);
 	   hThread = CreateThread(NULL, 0, ComThread, &d, 0, &dwThreadID);
 	   d.Do(hInstance,MAKEINTRESOURCE(IDD_DIALOG));

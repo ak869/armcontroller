@@ -1,18 +1,12 @@
 #include "Dlg.h"
 extern HANDLE p;
-extern struct  tag_machine
-{
-	unsigned char node  : 3;
-	unsigned char size	: 3;		/* 0 - 6 为长度，7为扩展*/
-	unsigned char datapack	: 1;
-	unsigned char dir		: 1;
-    unsigned char data[4];
-}machine[14];
+extern struct  tag_machine machine[14];
+extern DWORD StartTime;
 CDlg::CDlg(void)
 {
 	m_hWnd= NULL;
 	EventExit = CreateEvent(NULL,TRUE, FALSE,NULL);
-	m_Lock = 1;
+	m_Lock = 0;
 }
 
 CDlg::~CDlg(void)
@@ -75,18 +69,24 @@ DWORD CDlg::DialogParam(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		int i;
 		DWORD	wNotifyCode,wID;
-		HWND	hwndCtl;		 
+		HWND	hwndCtl;
+		DWORD	t;
 		  switch(uMsg)
 		  {
 			  case WM_INITDIALOG:
 				  ShowWindow(m_hWnd,SW_SHOW);
-				  if( m_Lock == 0)
-				  {
-					  
-				  }
-				  else
-				  {
-					  
+				  Unlock();
+				  break;
+			  case WM_TIMER:
+				  t = GetTickCount() - StartTime;				  
+				  for( i = 0; i < 4; i++ )
+				  {				    
+					if( t )
+					{
+						WaitForSingleObject(p,INFINITE);	
+						SetDlgItemInt(m_hWnd, IDC_TIMEDISP1 + i, machine[i].Count * 1000 / t, FALSE);
+						SetEvent(p);
+					}
 				  }
 				  break;
 			  case (WM_USER + 1):
@@ -102,13 +102,22 @@ DWORD CDlg::DialogParam(UINT uMsg, WPARAM wParam, LPARAM lParam)
 						  EndDialog(m_hWnd, 0);
 						  break;
 					  case IDC_WEIGAND1:
-						  OnWeigandButton(0);
+					  case IDC_WEIGAND2:
+					  case IDC_WEIGAND3:
+					  case IDC_WEIGAND4:
+						  OnWeigandButton(wID - IDC_WEIGAND1);
 						  break;
 					  case IDC_BUTTON1:
-						  OnExitButton(0);
+					  case IDC_BUTTON2:
+					  case IDC_BUTTON3:
+					  case IDC_BUTTON4:
+						  OnExitButton(wID - IDC_BUTTON1);
 						  break;
 					  case IDC_MEGNET1:
-						  OnMegnetButton(0);
+					  case IDC_MEGNET2:
+					  case IDC_MEGNET3:
+					  case IDC_MEGNET4:
+						  OnMegnetButton(wID - IDC_MEGNET1);
 						  break;
 				  }
 				  break;
@@ -124,8 +133,13 @@ DWORD CDlg::DialogParam(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 void CDlg::Unlock(void)
 	{
-		
-		m_Lock = 0;
+		WaitForSingleObject(p,INFINITE);
+		m_Lock++;
+		if( m_Lock == 2 )
+		{//Init
+			SetTimer(m_hWnd, IDC_TIMER1, 5000, NULL);
+		}
+		SetEvent(p);
 	}
 
 void CDlg::OnWeigandButton(int id)
@@ -134,15 +148,15 @@ void CDlg::OnWeigandButton(int id)
 		BOOL  bret;
 		val = ::GetDlgItemInt(m_hWnd, IDC_USERID1 + id, &bret, FALSE);
 		WaitForSingleObject(p,INFINITE);
-//		if( machine[addr].node != 0xff )
+		if( machine[id].size == 0 )
 		{
 			machine[id].size = 4;
 			machine[id].dir = 1;
 			machine[id].datapack = 0;
 			machine[id].node = 4;
-			machine[id].data[0] = val&0xff;
-			machine[id].data[1] = (val >> 8);
-			machine[id].data[2] = (val >> 16);
+			machine[id].data[0] = val & 0xff;
+			machine[id].data[1] = (val >> 8) & 0xff;
+			machine[id].data[2] = (val >> 16) & 0xff;
 			machine[id].data[3] = (val >> 24);	
 		}
 		SetEvent(p);
@@ -151,6 +165,7 @@ void CDlg::OnWeigandButton(int id)
 void CDlg::OnExitButton(int id)
 	{
 		WaitForSingleObject(p,INFINITE);
+		if( machine[id].size == 0 )
 		{
  			machine[id].size = 1;
 			machine[id].dir = 1;
@@ -164,6 +179,7 @@ void CDlg::OnExitButton(int id)
 void CDlg::OnMegnetButton(int id)
 	{
 		WaitForSingleObject(p,INFINITE);
+		if( machine[id].size == 0 )
 		{
  			machine[id].size = 1;
 			machine[id].dir = 1;
