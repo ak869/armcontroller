@@ -44,6 +44,7 @@ void PcLineTask(void  *pdata);
 void InputPinTask(void  *pdata);
 void mainTask(void *pdata);
 void TimeTask(void *pdata);
+void HostLineTask(void *pdata);
 
 OS_EVENT *QNoEmptySem, *QFullSem;
 int main (void)
@@ -104,15 +105,15 @@ void mainTask(void *pdata)
 			
 	}
 	OSTaskCreate (InputPinTask,(void *)0, &InputTaskStk[TaskStkLengh - 1], 3);	
-	OSTaskCreate ( TimeTask,(void *)0, &TimeTaskStk[TaskStkLengh - 1],4);
-//	OSTaskCreate (PcLineTask,(void *)0, &ComTaskStk[TaskStkLengh - 1], 4);	
+	OSTaskCreate ( TimeTask,(void *)0, &TimeTaskStk[TaskStkLengh - 1], 4);
+	OSTaskCreate ( HostLineTask,(void *)0, &ComTaskStk[TaskStkLengh - 1], 5);	
 	while(1)
 	{
 		OSSemPend(QNoEmptySem, 0, &err);
 		msg->bits.size = 8;
 		NMsgQRead( msg, 0,0);
-		ntype = msg->bits.node & 0x7;
-		nid = (msg->bits.node >> 3);
+		ntype = msg->bits.node & MSG_CHILDREN_NODE_MASK;
+		nid = (msg->bits.node >> MSG_PARENT_NODE_BIT);
 		switch( ntype )
 		{
 			case READERDATA_NODE:
@@ -161,7 +162,28 @@ void mainTask(void *pdata)
 				}			
 				if( t ^ attr->button )
 				{
-					IO1SET = PIN_DOOR1;
+					switch( nid )
+					{
+						case 0:
+							IO1SET = PIN_DOOR1;
+							break;
+						case 1:
+							break;
+						default:
+							if( nid < 16 )
+							{
+								msg->bits.node = (nid << MSG_PARENT_NODE_BIT) + DOOR_NODE;
+								msg->bits.size = 4;
+								msg->bits.msg = 1;
+								msg->bits.task = 5;
+								while( NMsgQWrite( msg ) != QUEUE_OK )
+								{
+									OSTimeDly(2);
+								}
+							}
+							break;
+			
+					}					
 					timecount[nid].door_count = attr->door_delay;
 					ReadRTC(dt);
 					LogWrite( (nid<<3) + DOOR_NODE, 0, 0, dt->value);
@@ -183,9 +205,11 @@ void TimeTask(void *pdata)
 	uint8 mbuf[8];
 	struct tag_attrib *attr;
 	DATETIME *dt;
+	PNODEMSG msg;
 	struct tag_timecount * t;
 	attr = (struct tag_attrib *)mbuf;
 	dt = (DATETIME *)mbuf;
+	msg = ( PNODEMSG )mbuf;
 	
 	pdata = pdata;
 	while(1)
@@ -208,7 +232,17 @@ void TimeTask(void *pdata)
 					case 0:
 						IO1CLR = PIN_DOOR1;
 						break;
+					case 1:
+						break;
 					default:
+						msg->bits.node = (i << MSG_PARENT_NODE_BIT) + DOOR_NODE;
+						msg->bits.size = 4;
+						msg->bits.msg = 0;
+						msg->bits.task = 5;
+						while( NMsgQWrite( msg ) != QUEUE_OK )
+						{
+							OSTimeDly(2);
+						}
 						break;	
 				}						
 			}

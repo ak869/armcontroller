@@ -39,7 +39,7 @@ uint8 NMsgQWrite( PNODEMSG Val )
 	uint8 nSize;
 	uint16 *map;
 	uint32 m,mask;
-	nSize = (Val->bits.size >> 2);
+	nSize = (Val->bits.size + 3) >> 2;
 	if( nSize == 0 )
 		return NOT_OK;
 	mask = (1 << nSize) - 1;

@@ -94,7 +94,7 @@ static OS_EVENT *Uart1Sem;
 {
     uint16 Fdiv;
     
-    PINSEL0 = (PINSEL0 & 0xfffffff0) | 0x05;    /* 选择管脚为UART1 */
+    PINSEL0 = (PINSEL0 & 0xfff0ffff) | (0x05 << 16);    /* 选择管脚为UART1 */
 
     U1LCR = 0x80;                               /* 允许访问分频因子寄存器 */
     Fdiv = (Fpclk / 16) / bps;                  /* 设置波特率 */
@@ -180,7 +180,7 @@ void UART1Write(uint8 *Data, uint16 NByte)
     OS_ENTER_CRITICAL();
     while (NByte-- > 0)
     {
-        UART0Putch(*Data++);
+        UART1Putch(*Data++);
     }
     OS_EXIT_CRITICAL();
 } 

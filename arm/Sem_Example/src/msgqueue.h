@@ -14,6 +14,12 @@ typedef union tag_nodemsg
 	uint32 value[1];	
 }NODEMSG,*PNODEMSG;
 
+#define MSG_PARENT_NODE_BIT			3
+#define MSG_PARENT_NODE_MASK		0x78
+#define MSG_CHILDREN_NODE_BIT		0
+#define MSG_CHILDREN_NODE_MASK		0x7
+
+
 void NMsgQCreate( void );
 uint8 NMsgQWrite( PNODEMSG Val );
 uint8 NMsgQRead( PNODEMSG Ret,uint8 node, uint8 node_mask );

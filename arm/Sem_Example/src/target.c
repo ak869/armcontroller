@@ -152,7 +152,8 @@
     extern void Timer0_Handler(void);
 //    extern void SSP_Handler(void);
     extern void UART0_Handler(void);
-
+	extern void UART1_Handler(void);
+	
     VICIntEnClr = 0xffffffff;
     VICDefVectAddr = (uint32)IRQ_Handler;
 
@@ -164,9 +165,13 @@
 //    VICVectCntl13 = (0x20 | 11);
 //    VICIntEnable = 1 << 11;
     
-    VICVectAddr14 = (uint32)UART0_Handler;
-    VICVectCntl14 = (0x20 | 6);
-    VICIntEnable = 1 << 6;       
+    VICVectAddr13 = (uint32)UART0_Handler;
+    VICVectCntl13 = (0x20 | 6);
+    VICIntEnable |= 1 << 6;
+    
+    VICVectAddr14 =  (uint32)UART1_Handler;
+    VICVectCntl14 = (0x20 | 7);
+    VICIntEnable |= 1 << 7;    
  }
 
 /*********************************************************************************************************
