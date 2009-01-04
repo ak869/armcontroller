@@ -5,15 +5,31 @@ P0.6-MOSI
 P0.7-MCS
 */
 #include "config.h"
+
+#define FLASH_FREE			0
+#define FLASH_A			1
+#define FLASH_B			2
+#define FLASH_C			3
+#define FLASH_D			4
+#define FLASH_BUFFER1_LOCK	0x10
+#define	FLASH_BUFFER2_LOCK	0x20
+
 #define MCS			PIN_MCS
 static OS_EVENT *FlashSem;
-static uint8 UseFlashTaskPro;
+static OS_EVENT *FlashBufSem;
+static uint8 UseFlashTaskPro, prev_level;
 uint8 FlashInit(void)
 {
     UseFlashTaskPro = OS_PRIO_SELF;
+    prev_level = FLASH_FREE;
     FlashSem = OSSemCreate(1);                    /* ”√”⁄ª•≥‚∑√Œ FLASH */
-    if (FlashSem != NULL)
+    FlashBufSem = OSSemCreate(1);
+    if (FlashSem != NULL && FlashBufSem != NULL )
     {
+    	if( (at45db_Status_reg_read() & 0x80) == 0 )
+    	{
+    		prev_level = FLASH_A;
+    	}   
         return TRUE;
     }
     else
@@ -21,14 +37,49 @@ uint8 FlashInit(void)
         return FALSE;
     }	
 }
-void FlashStart(void)
+
+void at45db_Buffer_UnLock(uint8 id)
+{
+	OS_ENTER_CRITICAL();
+	id <<= 4;
+	prev_level &= ~id;
+	OS_EXIT_CRITICAL();
+}
+
+void FlashStart(uint8 level, uint8 id)
 {
 	uint8 err;
+	
     if( UseFlashTaskPro != GetOSPrioCur() )
     {
     	OSSemPend(FlashSem, 0, &err);
     	UseFlashTaskPro = GetOSPrioCur();
     }
+    
+    
+/*    
+    err = prev_level & 0x0f;
+    id <<= 4;
+    if( err == FLASH_B )
+    {
+    	if( level == FLASH_C &&
+    	(prev_level & 0xf0) != id )
+    	{
+    		prev_level |=  id;
+    		break;
+    	}else
+    	{
+    		at45db_Status_reg_read();
+    		OSTimeDly(2);
+    	}
+    }else if( err == FLASH_D )
+    {
+    	at45db_Status_reg_read();
+    	OSTimeDly(2);
+    }
+*/    
+    
+    
 }
 void FlashEnd(void)
 {
@@ -45,8 +96,8 @@ uint8 at45db_Status_reg_read(void)
 {
 	uint8 rcv_data;
 	int i;
-	FlashStart();
-    	SSPStart();
+	FlashStart(FLASH_C, 0);
+    SSPStart();
 	IOCLR = MCS;			
 	SSPDR = 0xD7;
 	SSPDR = 0xFF;
@@ -69,13 +120,15 @@ void at45db_Buffer_Write( int id,uint16 ba, uint8 *buf, int nSize)
 {
 	int j;
 	uint8 t;
-	FlashStart();
+	FlashStart(FLASH_C,id);
 	while( (at45db_Status_reg_read() & 0x80) == 0 ) OSTimeDly(2);
 	
 	SSPStart();
 	IOCLR = MCS;	
 	if( id == 1 )
+	{
 		SSPDR = 0x84;
+	}
 	else
 		SSPDR = 0x87;
 		
@@ -115,7 +168,7 @@ void at45db_Buffer_Read(int id, uint16 ba, uint8 *buf,int nSize)
 {
 	int j;
 	uint8 t;
-	FlashStart();
+	FlashStart(FLASH_C,id);
 	while( (at45db_Status_reg_read() & 0x80) == 0 ) OSTimeDly(2);
 	SSPStart();	
 	IOCLR = MCS;
@@ -157,7 +210,7 @@ void at45db_Comp_uint32(uint16 pa,uint16 ba, uint32 id, int nSize, uint16 *empty
 	int i,j,bytes;
 	uint8 t,*id8;
 	uint32 c;
-	FlashStart();
+	FlashStart(FLASH_A,0);
 	while( (at45db_Status_reg_read() & 0x80) == 0 ) OSTimeDly(2);	
 	SSPStart();
 	IOCLR = MCS;
@@ -217,7 +270,7 @@ void at45db_Page_Read(uint16 pa,uint16 ba, uint8* buf, int nSize)
 {
 	int j;	
 	uint8 t;
-	FlashStart();
+	FlashStart(FLASH_A,0);
 	while( (at45db_Status_reg_read() & 0x80) == 0 ) OSTimeDly(2);
 	SSPStart();	
 	IOCLR = MCS;
@@ -261,7 +314,7 @@ void at45db_PagetoBuffer(int id, uint16 pa)
 {
 	int i;
 	uint8 t;
-	FlashStart();
+	FlashStart(FLASH_B,id);
 	while( (at45db_Status_reg_read() & 0x80) == 0 )
 		 OSTimeDly(2);
 	SSPStart(); 	
@@ -297,7 +350,7 @@ void at45db_BuffertoPage(int id, uint16 pa)
 {
 	int i;
 	uint8 t;
-	FlashStart();
+	FlashStart(FLASH_B,id);
 	while( (at45db_Status_reg_read() & 0x80) == 0 ) OSTimeDly(2);
 	SSPStart();
 	IOCLR = MCS;
@@ -330,7 +383,7 @@ void at45db_BuffertoPageNoErase(int id, uint16 pa)
 {
 	int i;
 	uint8 t;	
-	FlashStart();
+	FlashStart(FLASH_B,id);
 	while( (at45db_Status_reg_read() & 0x80) == 0 ) OSTimeDly(2);
 	SSPStart();	
 	IOCLR = MCS;
@@ -365,7 +418,7 @@ void at45db_PageErase(uint16 pa)
 
 	int i;
 	uint8 t;
-	FlashStart();
+	FlashStart(FLASH_B,0);
 	while( (at45db_Status_reg_read() & 0x80) == 0 ) OSTimeDly(2);
 	SSPStart();	
 	IOCLR = MCS;
@@ -400,7 +453,7 @@ void at45db_BlockErase(uint16 pa)
 {
 	int i;
 	uint8 t;
-	FlashStart();
+	FlashStart(FLASH_B,0);
 	while( (at45db_Status_reg_read() & 0x80) == 0 ) OSTimeDly(2);
 	SSPStart();	
 	IOCLR = MCS;
@@ -429,7 +482,7 @@ void at45db_ChipErase(void)
 {
 	int i;
 	uint8 t;
-	FlashStart();
+	FlashStart(FLASH_B,0);
 	while( (at45db_Status_reg_read() & 0x80) == 0 ) OSTimeDly(2);
 	SSPStart();	
 	IOCLR = MCS;
@@ -458,7 +511,7 @@ void at45db_BufferWrite_PageProg(int id, uint16 pa,uint16 ba,uint8* buf, int nSi
 {
 	int j;
 	uint8 t;
-	FlashStart();
+	FlashStart(FLASH_B,id);
 	while( (at45db_Status_reg_read() & 0x80) == 0 ) OSTimeDly(2);
 	SSPStart();
 	IOCLR = MCS;
