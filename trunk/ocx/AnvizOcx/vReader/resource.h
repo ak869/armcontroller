@@ -3,14 +3,48 @@
 // Used by vReader.rc
 //
 #define IDD_DIALOG                      101
-#define IDC_BUTTON1                     1001
-#define IDC_MEGNET1                     1002
-#define IDC_USERID1                     1003
-#define IDC_WEIGAND1                    1004
-#define IDC_DOOR1                       1005
-#define IDC_CTRL1                       1006
-#define IDC_CALLBACKTIME1               1008
-#define IDC_TIMEDISP1                   1009
+
+#define IDC_BUTTON1                     2001
+#define IDC_BUTTON2                     2002
+#define IDC_BUTTON3                     2003
+#define IDC_BUTTON4                     2004
+
+#define IDC_MEGNET1                     1016
+#define IDC_MEGNET2                     1017
+#define IDC_MEGNET3                     1018
+#define IDC_MEGNET4                     1019
+
+#define IDC_USERID1                     1032
+#define IDC_USERID2                     1033
+#define IDC_USERID3                     1034
+#define IDC_USERID4                     1035
+
+#define IDC_WEIGAND1                    1048
+#define IDC_WEIGAND2                    1049
+#define IDC_WEIGAND3                    1050
+#define IDC_WEIGAND4                    1051
+
+#define IDC_DOOR1                       1064
+#define IDC_DOOR2                       1065
+#define IDC_DOOR3                       1066
+#define IDC_DOOR4                       1067
+
+#define IDC_CTRL1                       1080
+#define IDC_CTRL2                       1081
+#define IDC_CTRL3                       1082
+#define IDC_CTRL4                       1083
+
+#define IDC_CALLBACKTIME1               1096
+#define IDC_CALLBACKTIME2               1097
+#define IDC_CALLBACKTIME3               1099
+#define IDC_CALLBACKTIME4               1100
+
+#define IDC_TIMEDISP1                   1112
+#define IDC_TIMEDISP2                   1113
+#define IDC_TIMEDISP3                   1114
+#define IDC_TIMEDISP4                   1115
+
+#define IDC_TIMER1						1128
 
 // Next default values for new objects
 // 
