@@ -3,7 +3,7 @@
 static uint8 host_buf[256];
 //token
 extern OS_EVENT *QNoEmptySem;
-#define TOKEN_SIZE		3
+#define TOKEN_SIZE_BIT		3
 
 #define TOKEN_FLAG		0
 #define TOKEN_NODE		1
@@ -47,23 +47,33 @@ void HostLineTask(void  *pdata)
 	union tag_flashaddr addr;
 	PNODEMSG msg;
 	uint8 *f;
+	uint32 time;
 		
 	pdata = pdata;
 	msg = (PNODEMSG)mbuf;
-	node = 0x10;
+	node = 2;
+	err = OS_NO_ERR;
+	time = GetOSTime();
 	while(1)
 	{
-		node += 0x80;
-		if( node > 0x78 )
-			node = 0x10;	
+		while( err == OS_NO_ERR )
+		{
+			UART1GetchForWait(1, &err);
+			time = GetOSTime() - 1;
+		}
 		
+/*	
+		node++;
+		if( node > 15 )
+			node = 2;	
+*/		
 		/*
 			发送令牌		
 		*/		
 		msg->bits.size = 8;
-		if( NMsgQRead(msg, node, 0x78) )
+		if( NMsgQRead(msg, (node << MSG_PARENT_NODE_BIT ), MSG_PARENT_NODE_MASK) )
 		{
-			t = msg->bits.node & 0x3;
+			t = msg->bits.node & MSG_CHILDREN_NODE_MASK;
 			nSize = msg->bits.size > 4 ? 4:1;
 			switch( t )
 			{
@@ -72,7 +82,7 @@ void HostLineTask(void  *pdata)
 				default:
 					if( msg->bits.size > 4 )
 					{
-						nSize = 0;
+						nSize = msg->bits.size - 4;
 						f = (uint8*)(msg->value + 1);
 						host_buf[TOKEN_P1] = f[0];
 						host_buf[TOKEN_P2] = f[1];
@@ -85,14 +95,16 @@ void HostLineTask(void  *pdata)
 						nSize = 1;
 						host_buf[TOKEN_P1] = msg->bits.msg;	
 					}
-					host_buf[TOKEN_NODE] = t | (nSize << TOKEN_SIZE);					
+					host_buf[TOKEN_NODE] = t | ( nSize  << TOKEN_SIZE_BIT );					
 					nSize = 0;				
 					break;
 			}			
+		}else
+		{
+			host_buf[TOKEN_NODE] = 0x0;
 		}
-	
 		host_buf[TOKEN_FLAG] = PLT_VERSION;
-		host_buf[TOKEN_ADDR] = (node >> 3);
+		host_buf[TOKEN_ADDR] = node;
 		chk = 0;
 		for( i = 1; i < CMD_SIZE - 1; i++ )
 		{
@@ -106,21 +118,34 @@ void HostLineTask(void  *pdata)
 			
 			for(i = 0; i < nSize; i++)
 				chk ^= host_buf[DATA_PACK_DATA + i];
-				
-			host_buf[DATA_PACK_DATA + i] = chk;	
+			host_buf[CMD_SIZE] =  PLT_VERSION;
+			host_buf[DATA_PACK_DATA + i] = chk;
+			nSize += 2;	
 		}
-		
-		//senduart1
-		UART1Write(host_buf, 8);
+		nSize += CMD_SIZE;
 		/*
-			接受等待，解析协议
+			没有超过总线空闲时间的继续等
 		*/
+		time = GetOSTime() - time;			
+		if( time < 2 )					//40ms
+			OSTimeDly( 2 - time );
+		/*
+			Send Uart;
+		*/		
+		UART1Write(host_buf, nSize);
 		/*
 			记录时钟
 		*/
-		host_buf[0] = UART1GetchForWait(4, &err);
-		if( err != OS_NO_ERR )
+		time = GetOSTime();
+		/*
+			接受等待，解析协议
+		*/
+//		nSize = (nSize + 10 + 4) / 5; 		
+		host_buf[0] = UART1GetchForWait(200, &err);	//20ms
+		if( err != OS_NO_ERR || 
+			host_buf[0] != PLT_VERSION )
 		{
+			time = GetOSTime() - 2;
 			continue;
 		}
 		chk = 0;
@@ -129,7 +154,7 @@ void HostLineTask(void  *pdata)
 			host_buf[i] = UART1GetchForWait(1, &err);
 			if( err != OS_NO_ERR )
 			{
-			
+				time = GetOSTime() - 1;		
 				continue;
 			}
 			chk^= host_buf[i];
@@ -138,37 +163,34 @@ void HostLineTask(void  *pdata)
 		{
 			continue;
 		}
-		
 		/*
 			处理协议		
 		*/
-		msg->bits.node = (host_buf[TOKEN_NODE] & 0x3) + host_buf[TOKEN_ADDR] << 3;
-		nSize = (host_buf[TOKEN_NODE] >> 3 & 0x3);
-		if( nSize == 1 )
-		{
-			msg->bits.size = 8;
-			msg->bits.msg = host_buf[TOKEN_P1];
-		}else
-		{
-			msg->bits.size = 8;
-			f = (uint8*)(msg->value + 1);
-			f[0] = host_buf[TOKEN_P1];
-			f[1] = host_buf[TOKEN_P2];
-			f[2] = host_buf[TOKEN_P3];
-			f[3] = host_buf[TOKEN_P4];		
+		nSize = ((host_buf[TOKEN_NODE] >> 3) & 0x7);
+		if( (host_buf[TOKEN_NODE] & 0x80) && 
+			nSize != 0 &&
+			host_buf[TOKEN_ADDR] == node)
+		{				
+			msg->bits.node = (host_buf[TOKEN_NODE] & MSG_CHILDREN_NODE_MASK) + (node << MSG_PARENT_NODE_BIT);			
+			if( nSize == 1 )
+			{
+				msg->bits.size = 4;
+				msg->bits.msg = host_buf[TOKEN_P1];
+			}else
+			{
+				msg->bits.size = 8;
+				f = (uint8*)(msg->value + 1);
+				f[0] = host_buf[TOKEN_P1];
+				f[1] = host_buf[TOKEN_P2];
+				f[2] = host_buf[TOKEN_P3];
+				f[3] = host_buf[TOKEN_P4];		
+			}			 
+			msg->bits.task = 2;
+			while( NMsgQWrite(msg) != QUEUE_OK )
+			{
+				OSTimeDly(2);			
+			}
+			OSSemPost(QNoEmptySem);
 		}
-		 
-		msg->bits.task = 2;
-		while( NMsgQWrite(msg) != QUEUE_OK )
-		{
-			OSTimeDly(2);			
-		}
-		OSSemPost(QNoEmptySem);
-		
-		
-		/*
-			没有超过总线空闲时间的继续等
-		*/
-
 	}
 }

@@ -10,7 +10,7 @@ P2 - P4 :Flash addr
 */
 #define GETLONGDATA				0x39		//Short
 #define SETLONGDATA				0x4a		//Long
-#define SETBYTEDATA				003b	//	Short
+#define SETBYTEDATA				0x3b		//	Short
 #define SETBITDATA				0x3c		//Short
 #define ESAREFLASH				0x3d
 

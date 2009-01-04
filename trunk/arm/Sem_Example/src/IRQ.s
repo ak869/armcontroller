@@ -44,6 +44,7 @@ IRQ_Handler	HANDLER IRQ_Exception
 Timer0_Handler  HANDLER Timer0_Exception
 SSP_Handler  HANDLER 	SSP_Exception
 UART0_Handler HANDLER	UART0_Exception
+UART1_Handler HANDLER	UART1_Exception
     END
 ;/*********************************************************************************************************
 ;**                            End Of File
