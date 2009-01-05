@@ -6,8 +6,9 @@
 #define CLOSE_TYPE		0x02
 #define NONE_TYPE		0xff
 
-#define POWERID_TYPE				0x40
-#define REPEAT_TYPE					0x10
-#define NOPOWERID_TYPE				0x80
-#define ALARM_TYPE					0x20
+//USER_ID
+#define POWERID_TYPE				0x10
+#define NOENROLLID_TYPE				0x20
+#define POWERNOFULL_TYPE			0x30
+#define REPEAT_TYPE					0x40
 #endif

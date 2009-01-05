@@ -38,7 +38,7 @@ enum e_node
 #define EXIT_NODE			1
 #define OTHER_NODE			2
 #define ALARM_NODE			3
-#define READERDATA_NODE		4
+#define READER_NODE			4
 #define DOOR_NODE			5
 #define	CTRL_NODE			6
 

@@ -23,7 +23,7 @@ user	group
 
 #define OTHER_PAGE			0
 #define OTHER_SIZE			48
-#define OTHER_NUMBER		7
+#define OTHER_NUMBER		11
 
 /*
 	0 - 63		PAGE(1)
@@ -83,16 +83,23 @@ user	group
 #define USER_TEMP_SIZE		1
 
 
+#define DOOR_READER_PAGE	382
+#define DOOR_GROUP_PAGE		382
+#define DOOR_GROUP_BADDR	256
+
+#define SYSTEM_INFO_PAGE	383
+
+
 #define LOG_PAGE			384
 #define LOG_SIZE			16
 
 
 
 struct tag_timelist{
-	uint32 hour_start 		: 5;
 	uint32 minute_start 	: 6;
-	uint32 hour_end 		: 5;
+	uint32 hour_start 		: 5;
 	uint32 minute_end 		: 6;
+	uint32 hour_end 		: 5;	
 	uint32 weeks	  	: 7;
 	uint32 other		: 3;
 };//4
@@ -151,8 +158,8 @@ struct tag_userinfo
 typedef	union tag_time{
 		struct 
 		{
-			uint32 hour:5;
 			uint32 minute:6;
+			uint32 hour:5;			
 			uint32 second:6;					
 			uint32 day:5;
 			uint32 month:4;
@@ -161,14 +168,14 @@ typedef	union tag_time{
 		}timelong;
 		struct 
 		{
-			uint32 hour:5;
 			uint32 minute:6;
+			uint32 hour:5;			
 			uint32 second:6;					
 			uint32 day:5;
 			uint32 month:4;
 			uint32 year:6;
 		}time;		
-		uint32 value;
+		uint32	value;
 	}DATETIME ;
 struct tag_log{	
 	uint32 id;
@@ -192,8 +199,8 @@ struct tag_attrib{
 	uint8	door_delay;
 	uint8	megnet_delay;
 	uint8	card_delay;
-	uint8	card;
-
+	uint8	cards;
+	uint8	door;
 };//5
 void LogInit(void);
 void LogWrite(uint8 node, uint8 type, uint32 userid, uint32 ntime);
