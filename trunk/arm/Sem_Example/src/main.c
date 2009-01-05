@@ -67,13 +67,11 @@ int main (void)
 
 struct tag_timecount
 {
-	uint8 megnet_count;		//time	MEGNET_NODE state
-	uint8 door_count;		//time =0 door close, >0 door open 	DOOR_NODE state
-	uint8 reader_count;		//time								
-	uint8 reader_card;
-	uint8 other_count;		
-	uint8 ctrl_count;		//
-	uint8 reserved;			
+	uint8 megnet_time;		//time	MEGNET_NODE state
+	uint8 door_time;		//time =0 door close, >0 door open 	DOOR_NODE state
+	uint8 door_cards_time;		//time								
+	uint8 door_cards;
+	uint8 door_power;					
 	uint8 exit_state 	: 1;
 	uint8 alarm_state	: 1;
 	uint8 reader_state	: 1;
@@ -86,22 +84,20 @@ void PinInit(void)
 }
 void mainTask(void *pdata)
 {
-	uint8 err,t,ntype,nid;
-	uint8 mbuf[8];
+	uint8 err,ntype,nid;
+	uint8 mbuf[36 + 5];
 	PNODEMSG msg;
-	struct tag_attrib *attr;
-	DATETIME *dt;
+	DATETIME *dt;	
 	int i;
 	pdata = pdata;
-	dt = (DATETIME *)mbuf;
-	msg = (PNODEMSG)mbuf;
-	attr = (struct tag_attrib *)mbuf;
+	dt = ( DATETIME * )(mbuf + 36);
+	msg = ( PNODEMSG )mbuf;
 
 	TargetInit();
 	for( i = 0; i < FULL_DOORS; i++ )
 	{
-		timecount[i].door_count = 0xff;
-		timecount[i].megnet_count = 0xff;
+		timecount[i].door_time = 0xff;
+		timecount[i].megnet_time = 0xff;
 			
 	}
 	OSTaskCreate (InputPinTask,(void *)0, &InputTaskStk[TaskStkLengh - 1], 3);	
@@ -116,80 +112,197 @@ void mainTask(void *pdata)
 		nid = (msg->bits.node >> MSG_PARENT_NODE_BIT);
 		switch( ntype )
 		{
-			case READERDATA_NODE:
+			case READER_NODE:
 				{
+					int j;
+					struct tag_doorgroup * gp;
+					struct tag_attrib *attr;
+					uint8 state,power, buf[16];
+					uint32 *t,id;
+					uint16 ugp,ugb,d;
 					uint16 empty_p,exist_p;
-					struct tag_userinfo *info = (struct tag_userinfo *)mbuf;
-					at45db_Comp_uint32( USER_ID_PAGE, 0, *((uint32 *)msg->bits.data) , (USER_ID_NUMBER * USER_ID_SIZE), &empty_p, &exist_p );
+					gp = (struct tag_doorgroup *)mbuf;
+					attr = (struct tag_attrib *)mbuf;
+					ReadRTC(dt);
+					id = *((uint32 *)msg->bits.data);
+					at45db_Comp_uint32( USER_ID_PAGE, 0, d , (USER_ID_NUMBER * USER_ID_SIZE), &empty_p, &exist_p );
 					if( exist_p == (USER_ID_NUMBER * USER_ID_SIZE) )
 					{
-						// no enroll id;
+						// no enroll id
+						state = NOENROLLID_TYPE;						
+						break;
 					}
 					exist_p *= 2;
-					empty_p =  exist_p / 528;
-					at45db_Page_Read( empty_p + USER_INFO_PAGE, exist_p % 528, mbuf , 8);					
+					ugp =  exist_p / 528;
+					ugb = exist_p % 528;
+					
+					at45db_Page_Read( DOOR_READER_PAGE, nid << 4, mbuf, 16);
+					at45db_Page_Read( USER_GROUP_PAGE + ugp, ugb, mbuf + 16, 8);
+					for( i = 0; i < FULL_DOORS; i++ )
+					{
+						buf[i] = 0;
+					}
+					for( i = 0; i < FULL_DOORS; i++ )
+					{
+						if( mbuf[i] < 16 )
+						{
+							if( i & 0x1 )
+								buf[i] |= mbuf[16 + (i >> 1)] >> 4;
+							else
+								buf[i] |= mbuf[16 + (i >> 1)] & 0xf;							
+						}
+					}
+					for( i = 0; i < FULL_DOORS; i++ )
+					{
+						if( buf[i] < 14 )
+						{
+							at45db_Page_Read( i + GROUP_PAGE, buf[i] * GROUP_SIZE, mbuf, GROUP_SIZE);
+							ReadRTC(dt);
+							gp = (struct tag_doorgroup *)mbuf;
+							d = (dt->value & 0x7FF);
+							t = (uint32 *)(gp->t);
+							
+							for( j = 0; j < GROUP_TIMELIST_NUM; j++ )
+							{
+								if( d >= (uint16)(t[j] & 0x7FF) &&
+									d <= (uint16)((t[j] >> 11) & 0x7FF) )
+								{
+									if(  t[j] & 0x20000000 )
+									{//read other table
+										
+									}else
+									{
+										if( ((1 << dt->timelong.weeks) & (t[j] >> 22)) != 0 )
+										{
+											timecount[i].door_power += gp->power;
+											if( timecount[i].door_power > 100 )
+												timecount[i].door_power = 100;											
+											if( gp->power != 100 )
+												state = POWERNOFULL_TYPE;
+											else
+												state = POWERID_TYPE;										
+											break;								
+										}
+									}
+								}
+							}
+						}					
+						at45db_Page_Read(GROUP_PAGE + i, ATTRIB_BA, mbuf, 8);	
+						if(  attr->cards  > 0 )
+						{
+							if( timecount[i].door_power >= 100 &&
+								timecount[i].door_time == 0xff )
+							{
+								//open door
+								switch( nid )
+								{
+									case 0:
+										IO1SET = PIN_DOOR1;
+										break;
+									case 1:
+										break;
+									default:
+										if( nid < 16 )
+										{
+											msg->bits.node = (nid << MSG_PARENT_NODE_BIT) + DOOR_NODE;
+											msg->bits.size = 4;
+											msg->bits.msg = 1;
+											msg->bits.task = 5;
+											while( NMsgQWrite( msg ) != QUEUE_OK )
+											{
+												OSTimeDly(2);
+											}
+										}
+										break;
+						
+								}						
+								timecount[nid].door_time = attr->door_delay;						
+								LogWrite( (nid<<3) + DOOR_NODE, 0, 0, dt->value);						
+							}
+							else
+							{
+								
+								
+							}					
+					
+						}									
+
+					}
+ExitReaderNode:					
+					LogWrite( (nid<<3) + READER_NODE, state, d, dt->value);												
 									
 				}
 				break;
 			case MEGNET_NODE:
-				t = (msg->bits.msg & 0x1);
-				at45db_Page_Read(GROUP_PAGE + nid, ATTRIB_BA, mbuf, 8);			
-				OS_ENTER_CRITICAL();
-				if( t ^ attr->megnet )
 				{
-					//set megnet alarm					
-					timecount[nid].megnet_count = attr->megnet_delay;
-					
-				}
-				else
-				{	
-					//close megnet alarm				
-					timecount[nid].megnet_count = 0xff;					
-				}
-				OS_EXIT_CRITICAL();			
+					uint8 t;
+					struct tag_attrib *attr;
+					attr = (struct tag_attrib *)mbuf;
+					t = (msg->bits.msg & 0x1);
+					at45db_Page_Read(GROUP_PAGE + nid, ATTRIB_BA, mbuf, 8);			
+					OS_ENTER_CRITICAL();
+					if( t ^ attr->megnet )
+					{
+						//set megnet alarm					
+						timecount[nid].megnet_time = attr->megnet_delay;
+						
+					}
+					else
+					{	
+						//close megnet alarm				
+						timecount[nid].megnet_time = 0xff;					
+					}
+					OS_EXIT_CRITICAL();
+				}		
 				break;
-			case EXIT_NODE:			
-				t = (msg->bits.msg & 0x1);
-				at45db_Page_Read(GROUP_PAGE + nid, ATTRIB_BA, mbuf, 8);
-				OS_ENTER_CRITICAL();
-				if( attr->link < 16  )
+			case EXIT_NODE:
 				{
-					if( timecount[attr->link].megnet_count != 0xff )
+					uint8 t;
+					struct tag_attrib *attr;
+					attr = (struct tag_attrib *)mbuf;						
+					t = (msg->bits.msg & 0x1);
+					at45db_Page_Read(GROUP_PAGE + nid, ATTRIB_BA, mbuf, 8);
+					OS_ENTER_CRITICAL();
+					if( attr->link < 16  )
 					{
-						OS_EXIT_CRITICAL();
-						break;
-					}				
-				}			
-				if( t ^ attr->button )
-				{
-					switch( nid )
+						if( timecount[attr->link].megnet_time != 0xff )
+						{
+							OS_EXIT_CRITICAL();
+							break;
+						}				
+					}			
+					if( (t ^ attr->button ) && 
+						timecount[nid].door_time == 0xff )
 					{
-						case 0:
-							IO1SET = PIN_DOOR1;
-							break;
-						case 1:
-							break;
-						default:
-							if( nid < 16 )
-							{
-								msg->bits.node = (nid << MSG_PARENT_NODE_BIT) + DOOR_NODE;
-								msg->bits.size = 4;
-								msg->bits.msg = 1;
-								msg->bits.task = 5;
-								while( NMsgQWrite( msg ) != QUEUE_OK )
+						switch( nid )
+						{
+							case 0:
+								IO1SET = PIN_DOOR1;
+								break;
+							case 1:
+								break;
+							default:
+								if( nid < 16 )
 								{
-									OSTimeDly(2);
+									msg->bits.node = (nid << MSG_PARENT_NODE_BIT) + DOOR_NODE;
+									msg->bits.size = 4;
+									msg->bits.msg = 1;
+									msg->bits.task = 5;
+									while( NMsgQWrite( msg ) != QUEUE_OK )
+									{
+										OSTimeDly(2);
+									}
 								}
-							}
-							break;
-			
-					}					
-					timecount[nid].door_count = attr->door_delay;
-					ReadRTC(dt);
-					LogWrite( (nid<<3) + DOOR_NODE, 0, 0, dt->value);
-				}
+								break;
 				
-				OS_EXIT_CRITICAL();			
+						}					
+						timecount[nid].door_time = attr->door_delay;
+						ReadRTC(dt);
+						LogWrite( (nid<<3) + DOOR_NODE, 0, 0, dt->value);
+					}
+					
+					OS_EXIT_CRITICAL();
+				}			
 				break;			
 			default:
 				break;
@@ -218,15 +331,16 @@ void TimeTask(void *pdata)
 		for( i = 0; i < FULL_DOORS; i++ )
 		{
 			t = timecount + i;
-			if( t->door_count != 0xff &&
-				t->door_count != 0x0 )
+			if( t->door_time != 0xff &&
+				t->door_time != 0x0 )
 			{
-				t->door_count--;
+				t->door_time--;
 			}
-			else if( t->door_count == 0x0)
+			else if( t->door_time == 0x0)
 			{
 				//close door
-				t->door_count = 0xff;
+				t->door_time = 0xff;
+				t->door_power = 0;
 				switch(i)
 				{
 					case 0:
@@ -246,19 +360,19 @@ void TimeTask(void *pdata)
 						break;	
 				}						
 			}
-			if( t->megnet_count != 0xff &&  
-				t->megnet_count != 0x0 && 
-				t->door_count == 0xff )
+			if( t->megnet_time != 0xff &&  
+				t->megnet_time != 0x0 && 
+				t->door_time == 0xff )
 			{
-				t->megnet_count--;
-			}else if( t->megnet_count == 0x00 )
+				t->megnet_time--;
+			}else if( t->megnet_time == 0x00 )
 			{
 				at45db_Page_Read(GROUP_PAGE + i, ATTRIB_BA, mbuf, 8);
-				t->megnet_count = attr->megnet_delay;	
+				t->megnet_time = attr->megnet_delay;	
 				//read rtc
 				ReadRTC(dt);									
 				//write log
-				LogWrite( (i<<3) + MEGNET_NODE, ALARM_TYPE, 0, dt->value);
+				LogWrite( (i<<3) + MEGNET_NODE, 0, 0, dt->value);
 			}			
 		}
 		OS_EXIT_CRITICAL();	

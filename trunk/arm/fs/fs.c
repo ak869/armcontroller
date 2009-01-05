@@ -78,7 +78,7 @@ void FormatFlash(void)
 		pattr->door_delay = 6;
 		pattr->megnet_delay = 6;
 		pattr->card_delay = 20;
-		pattr->card	= 1;
+		pattr->cards	= 1;
 		ba = 0;		
 		for( x = 0; x < 14; x++)
 		{	
