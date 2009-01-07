@@ -37,7 +37,7 @@ uint8 FlashInit(void)
         return FALSE;
     }	
 }
-
+/*
 void at45db_Buffer_UnLock(uint8 id)
 {
 	OS_ENTER_CRITICAL();
@@ -45,7 +45,7 @@ void at45db_Buffer_UnLock(uint8 id)
 	prev_level &= ~id;
 	OS_EXIT_CRITICAL();
 }
-
+*/
 void FlashStart(uint8 level, uint8 id)
 {
 	uint8 err;
@@ -214,20 +214,68 @@ void at45db_Comp_uint32(uint16 pa,uint16 ba, uint32 id, int nSize, uint16 *empty
 	while( (at45db_Status_reg_read() & 0x80) == 0 ) OSTimeDly(2);	
 	SSPStart();
 	IOCLR = MCS;
-	id8 = (uint8*)&c;
-	id8 +=3;
+	
 	SSPDR = 0x03;
 	SSPDR = (uint8)(pa >> 6);
 	SSPDR = (uint8)(pa << 2) + ((uint8)(ba >> 8) & 0x3) ;
 	SSPDR = (uint8)ba;
 	
-	j = 0;
-	bytes = 0;
-	nSize += 4;
-	while( nSize )
-	{
-		t = SSPSR;
-		while( !(t & SSP_RX_FIFO_NO_EMPTY ) ) t = SSPSR;
+	t = SSPSR;
+	while( !(t & SSP_TX_FIFO_EMPTY ) ) t = SSPSR;
+	SSPDR = 0xff;
+	t = SSPDR;
+	SSPDR = 0xff;
+	t = SSPDR;
+	SSPDR = 0xff;
+	t = SSPDR;
+	SSPDR = 0xff;
+	t = SSPDR;
+	SSPDR = 0xff;
+	SSPDR = 0xff;
+	SSPDR = 0xff;
+	SSPDR = 0xff;
+	j = nSize;
+	id8 = (uint8*)&c;
+	while( j )
+	{		
+		t = SSPRIS;
+		while( !(t & SSP_RX_FIFO_HALF_FULL ) ) t = SSPRIS;
+		
+		*id8 = SSPDR;
+		id8++;
+		*id8 = SSPDR;
+		id8++;
+		*id8 = SSPDR;
+		id8++;
+		*id8 = SSPDR;
+		id8++;		
+		if( id == c )
+		{
+			break;
+		}else if( c == 0 || c == 0xffffffff)
+		{
+			*empty_p = j;
+		}
+		SSPDR = 0xff;
+		SSPDR = 0xff;
+		SSPDR = 0xff;
+		SSPDR = 0xff;
+		id8 = (uint8*)&c;
+		j -= 4;
+/*		
+		if( j == 4 )
+		{
+            __asm
+            {
+                nop
+                nop
+                nop
+            }			
+			
+				
+		}
+		
+		
 		if( j < 4 )
 			t = SSPDR;
 		else
@@ -254,12 +302,23 @@ void at45db_Comp_uint32(uint16 pa,uint16 ba, uint32 id, int nSize, uint16 *empty
 		{
 			SSPDR = 0xff;
 		}
-		j++;
-		nSize--;
+*/		
+		
 	}
+	
+	t = SSPSR;
+	while( !(t & SSP_TX_FIFO_EMPTY ) ) t = SSPSR;
+	t = SSPSR;
+	while( t & SSP_RX_FIFO_NO_EMPTY )
+	{
+		t = SSPDR;
+		t = SSPSR;
+	}
+
+	
 	IOSET = MCS;
-	*exist_p = (j - 4) & 0xfffc;
-	*empty_p = ( *empty_p - 4 )  & 0xfffc;
+	*exist_p = (nSize - j ) & 0xfffc;
+	*empty_p = ( nSize - *empty_p )  & 0xfffc;
 		
 	SSPEnd();
 	for( i = 0; i < 8; i++);
@@ -279,6 +338,8 @@ void at45db_Page_Read(uint16 pa,uint16 ba, uint8* buf, int nSize)
 	SSPDR = (uint8)(pa >> 6);
 	SSPDR = (uint8)(pa << 2) + ((uint8)(ba >> 8) & 0x3);
 	SSPDR = (uint8)ba;
+	
+	
 
 	j = 0;
 	nSize += 4;
