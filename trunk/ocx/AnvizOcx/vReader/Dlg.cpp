@@ -133,10 +133,15 @@ DWORD CDlg::DialogParam(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 void CDlg::Unlock(void)
 	{
+		int i;
 		WaitForSingleObject(p,INFINITE);
 		m_Lock++;
 		if( m_Lock == 2 )
 		{//Init
+			for( i = 0; i < 4; i++)
+			{
+				SetDlgItemInt(m_hWnd, IDC_USERID1 + i,0x67452301,FALSE);
+			}
 			SetTimer(m_hWnd, IDC_TIMER1, 5000, NULL);
 		}
 		SetEvent(p);
