@@ -26,8 +26,8 @@
 #include "stdlib.h"
 
 #define	TaskStkLengh	64			// 定义用户任务0的堆栈长度
- 
-OS_STK	MainStk [TaskStkLengh];		// 定义用户任务0的堆栈
+#define MainStkLengh	128
+OS_STK	MainStk [MainStkLengh];		// 定义用户任务0的堆栈
 OS_STK	ComTaskStk [TaskStkLengh];		// 定义用户任务0的堆栈
 OS_STK	InputTaskStk[TaskStkLengh];	// 定义Task1的堆栈
 OS_STK	TimeTaskStk[TaskStkLengh];
@@ -53,7 +53,7 @@ int main (void)
 	
 
 	QNoEmptySem = OSSemCreate(0);																								;
-	OSTaskCreate (mainTask,(void *)0, &MainStk[TaskStkLengh - 1], 2);		
+	OSTaskCreate (mainTask,(void *)0, &MainStk[MainStkLengh - 1], 2);		
 	OSStart ();
 	return 0;															
 }
@@ -125,7 +125,7 @@ void mainTask(void *pdata)
 					attr = (struct tag_attrib *)mbuf;
 					ReadRTC(dt);
 					id = *((uint32 *)msg->bits.data);
-					at45db_Comp_uint32( USER_ID_PAGE, 0, d , (USER_ID_NUMBER * USER_ID_SIZE), &empty_p, &exist_p );
+					at45db_Comp_uint32( USER_ID_PAGE, 0, id , (USER_ID_NUMBER * USER_ID_SIZE), &empty_p, &exist_p );
 					if( exist_p == (USER_ID_NUMBER * USER_ID_SIZE) )
 					{
 						// no enroll id
@@ -136,21 +136,23 @@ void mainTask(void *pdata)
 					ugp =  exist_p / 528;
 					ugb = exist_p % 528;
 					
-					at45db_Page_Read( DOOR_READER_PAGE, nid << 4, mbuf, 16);
-					at45db_Page_Read( USER_GROUP_PAGE + ugp, ugb, mbuf + 16, 8);
+					at45db_Page_Read( USER_GROUP_PAGE + ugp, ugb, mbuf, 8);
+					at45db_Page_Read( DOOR_READER_PAGE, nid << 1, (uint8*)&d, 2);
+					
 					for( i = 0; i < FULL_DOORS; i++ )
 					{
 						buf[i] = 0;
 					}
 					for( i = 0; i < FULL_DOORS; i++ )
 					{
-						if( mbuf[i] < 16 )
+						if( d & 0x1  )
 						{
 							if( i & 0x1 )
-								buf[i] |= mbuf[16 + (i >> 1)] >> 4;
+								buf[i] |= (mbuf[(i >> 1)] >> 4);
 							else
-								buf[i] |= mbuf[16 + (i >> 1)] & 0xf;							
+								buf[i] |= mbuf[(i >> 1)] & 0xf;							
 						}
+						d >>= 1;
 					}
 					for( i = 0; i < FULL_DOORS; i++ )
 					{
@@ -229,7 +231,7 @@ void mainTask(void *pdata)
 
 					}
 ExitReaderNode:					
-					LogWrite( (nid<<3) + READER_NODE, state, d, dt->value);												
+					LogWrite( (nid<<3) + READER_NODE, state, id, dt->value);												
 									
 				}
 				break;

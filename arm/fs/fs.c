@@ -100,16 +100,49 @@ void FormatFlash(void)
 			pgroup->power = 100;
 			buf[GROUP_SIZE - 1] = calc_crc(buf, GROUP_SIZE - 1);
 			if( x == 13 )
-				at45db_Buffer_Write(2, ba, buf, GROUP_SIZE + ATTRIB_SIZE );
+				at45db_Buffer_Write(1, ba, buf, GROUP_SIZE + ATTRIB_SIZE );
 			else
-				at45db_Buffer_Write(2, ba, buf, GROUP_SIZE );
+				at45db_Buffer_Write(1, ba, buf, GROUP_SIZE );
 			
 			ba += GROUP_SIZE;			
 		}
-		at45db_BuffertoPageNoErase(2, pa);
+		at45db_BuffertoPageNoErase(1, pa);
 		pa++;
 		
-	}	
+	}
+	
+	//DOOR_READER_PAGE
+	at45db_PagetoBuffer(1, DOOR_READER_PAGE);
+	for( i = 0; i < FULL_DOORS; i++ )
+	{
+		buf[0] = (uint8)((1 << i) & 0xff);
+		buf[1] = (uint8)(((1 << i) >> 8) & 0xff);
+		at45db_Buffer_Write(1, i * 2 , buf, 2);
+	}
+	at45db_BuffertoPageNoErase(1, USER_ID_PAGE + 30);
+	
+	at45db_PagetoBuffer(1, USER_ID_PAGE + 30);
+	buf[0] = 0x01;
+	buf[1] = 0x23;
+	buf[2] = 0x45;
+	buf[3] = 0x67;
+	at45db_Buffer_Write(1, 39 * 4, buf, 4);
+	at45db_BuffertoPageNoErase(1, USER_ID_PAGE + 30);
+	
+	
+	buf[0] = 0;
+	buf[1] = 0;
+	buf[2] = 0;
+	buf[3] = 0;
+	buf[4] = 0;
+	buf[5] = 0;
+	buf[6] = 0;
+	buf[7] = 0;
+	at45db_PagetoBuffer(1, USER_GROUP_PAGE + 60);
+	at45db_Buffer_Write(1, 39 * 8, buf, 8);
+	at45db_BuffertoPageNoErase(1, USER_ID_PAGE + 60);
+
+
 	
 }
 
