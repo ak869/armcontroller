@@ -97,27 +97,35 @@ StartWhile:
 				addr.value[2] = *(uart_buf + DATA_PACK_DATA + 2);
 				addr.value[3] = *(uart_buf + DATA_PACK_DATA + 3);
 						
-				if( addr.addr != 0 && nDataSize == 11 )
+				if( addr.addr != 0 && nDataSize == 13 )
 				{
-					at45db_Comp_uint32( USER_ID_PAGE, 0, addr.addr , (USER_ID_NUMBER * USER_ID_SIZE), &empty_p, &exist_p );
-					if( exist_p == (USER_ID_NUMBER * USER_ID_SIZE) )
+					at45db_Comp_uint32( USER_ID_PAGE, 0, addr.addr , (USER_ID_NUMBER), &empty_p, &exist_p );
+					if( exist_p == (USER_ID_NUMBER) )
 					{						
 						exist_p = empty_p;
 					}
 					addr.addr = 0;
-					empty_p =  exist_p / 528;
-					addr.bits.pa = empty_p + USER_ID_PAGE;
-					addr.bits.ba = exist_p % 528;
-					at45db_PagetoBuffer( 1,  empty_p + USER_ID_PAGE );
-					at45db_Buffer_Write( 1, exist_p % 528, uart_buf + DATA_PACK_DATA , 4);
-					at45db_BuffertoPage( 1, empty_p + USER_ID_PAGE );
+					empty_p =  exist_p / 132;
+					addr.bits.pa = empty_p;
+					addr.bits.ba = exist_p % 132;
+					at45db_PagetoBuffer( 1, addr.bits.pa + USER_ID_PAGE);
+					at45db_Buffer_Write( 1, addr.bits.ba, uart_buf + DATA_PACK_DATA , 4);
+					at45db_BuffertoPage( 1, addr.bits.pa + USER_ID_PAGE );
 					
-					exist_p *= 2;
-					empty_p =  exist_p / 528;
-					at45db_PagetoBuffer( 1, empty_p + USER_INFO_PAGE );	
-					at45db_Buffer_Write( 1, exist_p % 528, uart_buf + DATA_PACK_DATA + 4, 8);	
-					at45db_BuffertoPage( 1, empty_p + USER_INFO_PAGE );				
+					addr.bits.pa *= 2;
+					addr.bits.ba *= 2;
+					at45db_PagetoBuffer( 1, empty_p + USER_GROUP_PAGE );	
+					at45db_Buffer_Write( 1, addr.bits.ba, uart_buf + DATA_PACK_DATA + 4, 8);	
+					at45db_BuffertoPage( 1, empty_p + USER_GROUP_PAGE );				
 
+
+					addr.bits.pa >>= 2;
+					addr.bits.ba >>= 2;
+					at45db_PagetoBuffer( 1, addr.bits.pa + USER_INFO_PAGE );	
+					at45db_Buffer_Write( 1, addr.bits.ba, uart_buf + DATA_PACK_DATA + 12, 2);	
+					at45db_BuffertoPage( 1, addr.bits.pa + USER_INFO_PAGE );
+					
+						
 					uart_buf[CMD_P4] = 0;
 					nDataSize = 0;
 				}else
@@ -129,6 +137,7 @@ StartWhile:
 			break;
 		case DELUSER:
 			{
+				uint32 id;
 				uint16 empty_p,exist_p;
 				nDataSize = uart_buf[CMD_P1];
 				addr.value[0] = uart_buf[CMD_P1];
@@ -138,8 +147,8 @@ StartWhile:
 						
 				if( addr.addr != 0 )
 				{
-					at45db_Comp_uint32( USER_ID_PAGE, 0, addr.addr , (USER_ID_NUMBER * USER_ID_SIZE), &empty_p, &exist_p );
-					if( exist_p == (USER_ID_NUMBER * USER_ID_SIZE) )
+					at45db_Comp_uint32( USER_ID_PAGE, 0, addr.addr , (USER_ID_NUMBER), &empty_p, &exist_p );
+					if( exist_p == (USER_ID_NUMBER) )
 					{
 						uart_buf[CMD_P4] = ERR_USERNOEXIST;
 						nDataSize = 0;
@@ -149,10 +158,10 @@ StartWhile:
 					empty_p =  exist_p / 528;
 					addr.bits.pa = empty_p + USER_ID_PAGE;
 					addr.bits.ba = exist_p % 528;
-					addr.addr = 0;
-					at45db_PagetoBuffer( 1,  empty_p + USER_ID_PAGE );
-					at45db_Buffer_Write( 1, exist_p % 528, addr.value, 4);
-					at45db_BuffertoPageNoErase( 1, empty_p + USER_ID_PAGE );			
+					id = 0;
+					at45db_PagetoBuffer( 1, addr.bits.pa );
+					at45db_Buffer_Write( 1, addr.bits.ba, (uint8*)&id, 4);
+					at45db_BuffertoPageNoErase( 1, addr.bits.pa );			
 
 					uart_buf[CMD_P4] = 0;
 					nDataSize = 0;

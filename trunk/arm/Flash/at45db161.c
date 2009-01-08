@@ -207,7 +207,7 @@ void at45db_Buffer_Read(int id, uint16 ba, uint8 *buf,int nSize)
 
 void at45db_Comp_uint32(uint16 pa,uint16 ba, uint32 id, int nSize, uint16 *empty_p, uint16 *exist_p )
 {
-	int i,j,bytes;
+	int i,j;
 	uint8 t,*id8;
 	uint32 c;
 	FlashStart(FLASH_A,0);
@@ -219,21 +219,24 @@ void at45db_Comp_uint32(uint16 pa,uint16 ba, uint32 id, int nSize, uint16 *empty
 	SSPDR = (uint8)(pa >> 6);
 	SSPDR = (uint8)(pa << 2) + ((uint8)(ba >> 8) & 0x3) ;
 	SSPDR = (uint8)ba;
+	SSPDR = 0xff;
+	SSPDR = 0xff;
+	SSPDR = 0xff;
+	SSPDR = 0xff;
+
 	
-	t = SSPSR;
-	while( !(t & SSP_TX_FIFO_EMPTY ) ) t = SSPSR;
-	SSPDR = 0xff;
+	t = SSPRIS;
+	while( !(t & SSP_RX_FIFO_HALF_FULL ) ) t = SSPRIS;
 	t = SSPDR;
-	SSPDR = 0xff;
 	t = SSPDR;
-	SSPDR = 0xff;
 	t = SSPDR;
-	SSPDR = 0xff;
 	t = SSPDR;
+	
 	SSPDR = 0xff;
 	SSPDR = 0xff;
 	SSPDR = 0xff;
-	SSPDR = 0xff;
+	SSPDR = 0xff;	
+
 	j = nSize;
 	id8 = (uint8*)&c;
 	while( j )
@@ -261,21 +264,9 @@ void at45db_Comp_uint32(uint16 pa,uint16 ba, uint32 id, int nSize, uint16 *empty
 		SSPDR = 0xff;
 		SSPDR = 0xff;
 		id8 = (uint8*)&c;
-		j -= 4;
-/*		
-		if( j == 4 )
-		{
-            __asm
-            {
-                nop
-                nop
-                nop
-            }			
-			
-				
-		}
+		j--;
 		
-		
+/*			
 		if( j < 4 )
 			t = SSPDR;
 		else
@@ -317,8 +308,8 @@ void at45db_Comp_uint32(uint16 pa,uint16 ba, uint32 id, int nSize, uint16 *empty
 
 	
 	IOSET = MCS;
-	*exist_p = (nSize - j ) & 0xfffc;
-	*empty_p = ( nSize - *empty_p )  & 0xfffc;
+	*exist_p = ( nSize - j );
+	*empty_p = ( nSize - *empty_p );
 		
 	SSPEnd();
 	for( i = 0; i < 8; i++);
