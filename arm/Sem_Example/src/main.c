@@ -125,32 +125,31 @@ void mainTask(void *pdata)
 					attr = (struct tag_attrib *)mbuf;
 					ReadRTC(dt);
 					id = *((uint32 *)msg->bits.data);
-					at45db_Comp_uint32( USER_ID_PAGE, 0, id , (USER_ID_NUMBER * USER_ID_SIZE), &empty_p, &exist_p );
-					if( exist_p == (USER_ID_NUMBER * USER_ID_SIZE) )
+					at45db_Comp_uint32( USER_ID_PAGE, 0, id , (USER_ID_NUMBER ), &empty_p, &exist_p );
+					if( exist_p == (USER_ID_NUMBER ) )
 					{
 						// no enroll id
 						state = NOENROLLID_TYPE;						
 						break;
 					}
-					exist_p *= 2;
-					ugp =  exist_p / 528;
-					ugb = exist_p % 528;
+					ugp =  exist_p / 66;
+					ugb = exist_p % 66;
 					
-					at45db_Page_Read( USER_GROUP_PAGE + ugp, ugb, mbuf, 8);
+					at45db_Page_Read( USER_GROUP_PAGE + ugp, ugb * 8, mbuf, 8);
 					at45db_Page_Read( DOOR_READER_PAGE, nid << 1, (uint8*)&d, 2);
 					
 					for( i = 0; i < FULL_DOORS; i++ )
 					{
-						buf[i] = 0;
+						buf[i] = 0xff;
 					}
 					for( i = 0; i < FULL_DOORS; i++ )
 					{
 						if( d & 0x1  )
 						{
 							if( i & 0x1 )
-								buf[i] |= (mbuf[(i >> 1)] >> 4);
+								buf[i] = (mbuf[(i >> 1)] >> 4);
 							else
-								buf[i] |= mbuf[(i >> 1)] & 0xf;							
+								buf[i] = mbuf[(i >> 1)] & 0xf;							
 						}
 						d >>= 1;
 					}
@@ -159,7 +158,6 @@ void mainTask(void *pdata)
 						if( buf[i] < 14 )
 						{
 							at45db_Page_Read( i + GROUP_PAGE, buf[i] * GROUP_SIZE, mbuf, GROUP_SIZE);
-							ReadRTC(dt);
 							gp = (struct tag_doorgroup *)mbuf;
 							d = (dt->value & 0x7FF);
 							t = (uint32 *)(gp->t);
@@ -175,59 +173,60 @@ void mainTask(void *pdata)
 									}else
 									{
 										if( ((1 << dt->timelong.weeks) & (t[j] >> 22)) != 0 )
-										{
-											timecount[i].door_power += gp->power;
-											if( timecount[i].door_power > 100 )
-												timecount[i].door_power = 100;											
+										{											
 											if( gp->power != 100 )
 												state = POWERNOFULL_TYPE;
 											else
-												state = POWERID_TYPE;										
+												state = POWERID_TYPE;
+											timecount[i].door_power += gp->power;												
+											if( timecount[i].door_power > 100 )
+												timecount[i].door_power = 100;											
+										
 											break;								
 										}
 									}
 								}
-							}
-						}					
-						at45db_Page_Read(GROUP_PAGE + i, ATTRIB_BA, mbuf, 8);	
-						if(  attr->cards  > 0 )
-						{
-							if( timecount[i].door_power >= 100 &&
-								timecount[i].door_time == 0xff )
+							}//for j
+							at45db_Page_Read(GROUP_PAGE + i, ATTRIB_BA, mbuf, 8);	
+							if(  attr->cards  > 0 )
 							{
-								//open door
-								switch( nid )
+								if( timecount[i].door_power >= 100 &&
+									timecount[i].door_time == 0xff )
 								{
-									case 0:
-										IO1SET = PIN_DOOR1;
-										break;
-									case 1:
-										break;
-									default:
-										if( nid < 16 )
-										{
-											msg->bits.node = (nid << MSG_PARENT_NODE_BIT) + DOOR_NODE;
-											msg->bits.size = 4;
-											msg->bits.msg = 1;
-											msg->bits.task = 5;
-											while( NMsgQWrite( msg ) != QUEUE_OK )
+									//open door
+									switch( nid )
+									{
+										case 0:
+											IO1SET = PIN_DOOR1;
+											break;
+										case 1:
+											break;
+										default:
+											if( nid < 16 )
 											{
-												OSTimeDly(2);
+												msg->bits.node = (nid << MSG_PARENT_NODE_BIT) + DOOR_NODE;
+												msg->bits.size = 4;
+												msg->bits.msg = 1;
+												msg->bits.task = 5;
+												while( NMsgQWrite( msg ) != QUEUE_OK )
+												{
+													OSTimeDly(2);
+												}
 											}
-										}
-										break;
+											break;
+							
+									}						
+									timecount[i].door_time = attr->door_delay;						
+									LogWrite( (i<<3) + DOOR_NODE, 0, 0, dt->value);						
+								}
+								else
+								{
+									
+									
+								}					
 						
-								}						
-								timecount[nid].door_time = attr->door_delay;						
-								LogWrite( (nid<<3) + DOOR_NODE, 0, 0, dt->value);						
-							}
-							else
-							{
-								
-								
-							}					
-					
-						}									
+							}							
+						}								
 
 					}
 ExitReaderNode:					
