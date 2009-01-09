@@ -6,7 +6,7 @@
 
 
  /* File created by MIDL compiler version 7.00.0500 */
-/* at Sun Dec 21 15:38:15 2008
+/* at Fri Jan 09 13:49:16 2009
  */
 /* Compiler settings for .\AnvizOcx.idl:
     Oicf, W1, Zp8, env=Win32 (32b run)
@@ -164,9 +164,6 @@ MIDL_DEFINE_GUID(CLSID, CLSID_DeviceLog,0x198594D8,0x4EDA,0x4905,0x88,0x29,0x32,
 
 
 MIDL_DEFINE_GUID(CLSID, CLSID_DeviceLogs,0xD4239CB7,0x86BF,0x47B8,0x8E,0x20,0x38,0xD4,0x3A,0x23,0x3F,0x23);
-
-
-MIDL_DEFINE_GUID(CLSID, CLSID_BusPortData,0x5CBCB977,0x4494,0x4760,0x87,0xE3,0xDE,0x8E,0x07,0x45,0xA5,0x3B);
 
 #undef MIDL_DEFINE_GUID
 

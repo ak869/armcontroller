@@ -4,7 +4,7 @@
 
 
  /* File created by MIDL compiler version 7.00.0500 */
-/* at Sun Dec 21 15:38:15 2008
+/* at Fri Jan 09 13:49:16 2009
  */
 /* Compiler settings for .\AnvizOcx.idl:
     Oicf, W1, Zp8, env=Win32 (32b run)
@@ -319,18 +319,6 @@ typedef struct DeviceLogs DeviceLogs;
 #endif /* __cplusplus */
 
 #endif 	/* __DeviceLogs_FWD_DEFINED__ */
-
-
-#ifndef __BusPortData_FWD_DEFINED__
-#define __BusPortData_FWD_DEFINED__
-
-#ifdef __cplusplus
-typedef class BusPortData BusPortData;
-#else
-typedef struct BusPortData BusPortData;
-#endif /* __cplusplus */
-
-#endif 	/* __BusPortData_FWD_DEFINED__ */
 
 
 /* header files for imported files */
@@ -3074,24 +3062,6 @@ EXTERN_C const IID IID_IBusPortData;
     IBusPortData : public IDispatch
     {
     public:
-        virtual /* [helpstring][id][propget] */ HRESULT STDMETHODCALLTYPE get_Buffer( 
-            /* [retval][out] */ LONG *pVal) = 0;
-        
-        virtual /* [helpstring][id][propget] */ HRESULT STDMETHODCALLTYPE get_Size( 
-            /* [retval][out] */ LONG *pVal) = 0;
-        
-        virtual /* [helpstring][id] */ HRESULT STDMETHODCALLTYPE SetBuffer( 
-            /* [in] */ LONG Buf,
-            /* [in] */ LONG nSize) = 0;
-        
-        virtual /* [helpstring][id][propget] */ HRESULT STDMETHODCALLTYPE get_Param( 
-            /* [in] */ LONG id,
-            /* [retval][out] */ LONG *pVal) = 0;
-        
-        virtual /* [helpstring][id][propput] */ HRESULT STDMETHODCALLTYPE put_Param( 
-            /* [in] */ LONG id,
-            /* [in] */ LONG newVal) = 0;
-        
     };
     
 #else 	/* C style interface */
@@ -3141,29 +3111,6 @@ EXTERN_C const IID IID_IBusPortData;
             /* [out] */ EXCEPINFO *pExcepInfo,
             /* [out] */ UINT *puArgErr);
         
-        /* [helpstring][id][propget] */ HRESULT ( STDMETHODCALLTYPE *get_Buffer )( 
-            IBusPortData * This,
-            /* [retval][out] */ LONG *pVal);
-        
-        /* [helpstring][id][propget] */ HRESULT ( STDMETHODCALLTYPE *get_Size )( 
-            IBusPortData * This,
-            /* [retval][out] */ LONG *pVal);
-        
-        /* [helpstring][id] */ HRESULT ( STDMETHODCALLTYPE *SetBuffer )( 
-            IBusPortData * This,
-            /* [in] */ LONG Buf,
-            /* [in] */ LONG nSize);
-        
-        /* [helpstring][id][propget] */ HRESULT ( STDMETHODCALLTYPE *get_Param )( 
-            IBusPortData * This,
-            /* [in] */ LONG id,
-            /* [retval][out] */ LONG *pVal);
-        
-        /* [helpstring][id][propput] */ HRESULT ( STDMETHODCALLTYPE *put_Param )( 
-            IBusPortData * This,
-            /* [in] */ LONG id,
-            /* [in] */ LONG newVal);
-        
         END_INTERFACE
     } IBusPortDataVtbl;
 
@@ -3199,21 +3146,6 @@ EXTERN_C const IID IID_IBusPortData;
 #define IBusPortData_Invoke(This,dispIdMember,riid,lcid,wFlags,pDispParams,pVarResult,pExcepInfo,puArgErr)	\
     ( (This)->lpVtbl -> Invoke(This,dispIdMember,riid,lcid,wFlags,pDispParams,pVarResult,pExcepInfo,puArgErr) ) 
 
-
-#define IBusPortData_get_Buffer(This,pVal)	\
-    ( (This)->lpVtbl -> get_Buffer(This,pVal) ) 
-
-#define IBusPortData_get_Size(This,pVal)	\
-    ( (This)->lpVtbl -> get_Size(This,pVal) ) 
-
-#define IBusPortData_SetBuffer(This,Buf,nSize)	\
-    ( (This)->lpVtbl -> SetBuffer(This,Buf,nSize) ) 
-
-#define IBusPortData_get_Param(This,id,pVal)	\
-    ( (This)->lpVtbl -> get_Param(This,id,pVal) ) 
-
-#define IBusPortData_put_Param(This,id,newVal)	\
-    ( (This)->lpVtbl -> put_Param(This,id,newVal) ) 
 
 #endif /* COBJMACROS */
 
@@ -3453,14 +3385,6 @@ EXTERN_C const CLSID CLSID_DeviceLogs;
 
 class DECLSPEC_UUID("D4239CB7-86BF-47B8-8E20-38D43A233F23")
 DeviceLogs;
-#endif
-
-EXTERN_C const CLSID CLSID_BusPortData;
-
-#ifdef __cplusplus
-
-class DECLSPEC_UUID("5CBCB977-4494-4760-87E3-DE8E0745A53B")
-BusPortData;
 #endif
 #endif /* __AnvizOcxLib_LIBRARY_DEFINED__ */
 
