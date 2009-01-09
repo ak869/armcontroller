@@ -4,7 +4,7 @@
 
 
  /* File created by MIDL compiler version 7.00.0500 */
-/* at Sun Dec 21 15:38:15 2008
+/* at Fri Jan 09 13:49:16 2009
  */
 /* Compiler settings for .\AnvizOcx.idl:
     Oicf, W1, Zp8, env=Win32 (32b run)
@@ -1160,9 +1160,6 @@ static const AnvizOcx_MIDL_PROC_FORMAT_STRING AnvizOcx__MIDL_ProcFormatString =
 /* 964 */	0x8,		/* FC_LONG */
 			0x0,		/* 0 */
 
-	/* Procedure get_Buffer */
-
-
 	/* Procedure get_LogID */
 
 
@@ -1188,16 +1185,10 @@ static const AnvizOcx_MIDL_PROC_FORMAT_STRING AnvizOcx__MIDL_ProcFormatString =
 
 	/* Parameter pVal */
 
-
-	/* Parameter pVal */
-
 /* 990 */	NdrFcShort( 0x2150 ),	/* Flags:  out, base type, simple ref, srv alloc size=8 */
 /* 992 */	NdrFcShort( 0x4 ),	/* x86 Stack size/offset = 4 */
 /* 994 */	0x8,		/* FC_LONG */
 			0x0,		/* 0 */
-
-	/* Return value */
-
 
 	/* Return value */
 
@@ -1479,9 +1470,6 @@ static const AnvizOcx_MIDL_PROC_FORMAT_STRING AnvizOcx__MIDL_ProcFormatString =
 /* 1282 */	0x8,		/* FC_LONG */
 			0x0,		/* 0 */
 
-	/* Procedure get_Size */
-
-
 	/* Procedure get_AreaID */
 
 
@@ -1507,16 +1495,10 @@ static const AnvizOcx_MIDL_PROC_FORMAT_STRING AnvizOcx__MIDL_ProcFormatString =
 
 	/* Parameter pVal */
 
-
-	/* Parameter pVal */
-
 /* 1308 */	NdrFcShort( 0x2150 ),	/* Flags:  out, base type, simple ref, srv alloc size=8 */
 /* 1310 */	NdrFcShort( 0x4 ),	/* x86 Stack size/offset = 4 */
 /* 1312 */	0x8,		/* FC_LONG */
 			0x0,		/* 0 */
-
-	/* Return value */
-
 
 	/* Return value */
 
@@ -2192,9 +2174,6 @@ static const AnvizOcx_MIDL_PROC_FORMAT_STRING AnvizOcx__MIDL_ProcFormatString =
 /* 2044 */	0x8,		/* FC_LONG */
 			0x0,		/* 0 */
 
-	/* Procedure SetBuffer */
-
-
 	/* Procedure put_Attrib */
 
 /* 2046 */	0x33,		/* FC_AUTO_HANDLE */
@@ -2212,18 +2191,12 @@ static const AnvizOcx_MIDL_PROC_FORMAT_STRING AnvizOcx__MIDL_ProcFormatString =
 /* 2066 */	NdrFcShort( 0x0 ),	/* 0 */
 /* 2068 */	NdrFcShort( 0x0 ),	/* 0 */
 
-	/* Parameter Buf */
-
-
 	/* Parameter Node */
 
 /* 2070 */	NdrFcShort( 0x48 ),	/* Flags:  in, base type, */
 /* 2072 */	NdrFcShort( 0x4 ),	/* x86 Stack size/offset = 4 */
 /* 2074 */	0x8,		/* FC_LONG */
 			0x0,		/* 0 */
-
-	/* Parameter nSize */
-
 
 	/* Parameter newVal */
 
@@ -2234,16 +2207,10 @@ static const AnvizOcx_MIDL_PROC_FORMAT_STRING AnvizOcx__MIDL_ProcFormatString =
 
 	/* Return value */
 
-
-	/* Return value */
-
 /* 2082 */	NdrFcShort( 0x70 ),	/* Flags:  out, return, base type, */
 /* 2084 */	NdrFcShort( 0xc ),	/* x86 Stack size/offset = 12 */
 /* 2086 */	0x8,		/* FC_LONG */
 			0x0,		/* 0 */
-
-	/* Procedure get_Param */
-
 
 	/* Procedure get_Status */
 
@@ -2262,18 +2229,12 @@ static const AnvizOcx_MIDL_PROC_FORMAT_STRING AnvizOcx__MIDL_ProcFormatString =
 /* 2108 */	NdrFcShort( 0x0 ),	/* 0 */
 /* 2110 */	NdrFcShort( 0x0 ),	/* 0 */
 
-	/* Parameter id */
-
-
 	/* Parameter Node */
 
 /* 2112 */	NdrFcShort( 0x48 ),	/* Flags:  in, base type, */
 /* 2114 */	NdrFcShort( 0x4 ),	/* x86 Stack size/offset = 4 */
 /* 2116 */	0x8,		/* FC_LONG */
 			0x0,		/* 0 */
-
-	/* Parameter pVal */
-
 
 	/* Parameter pVal */
 
@@ -2284,16 +2245,10 @@ static const AnvizOcx_MIDL_PROC_FORMAT_STRING AnvizOcx__MIDL_ProcFormatString =
 
 	/* Return value */
 
-
-	/* Return value */
-
 /* 2124 */	NdrFcShort( 0x70 ),	/* Flags:  out, return, base type, */
 /* 2126 */	NdrFcShort( 0xc ),	/* x86 Stack size/offset = 12 */
 /* 2128 */	0x8,		/* FC_LONG */
 			0x0,		/* 0 */
-
-	/* Procedure put_Param */
-
 
 	/* Procedure put_Status */
 
@@ -2312,9 +2267,6 @@ static const AnvizOcx_MIDL_PROC_FORMAT_STRING AnvizOcx__MIDL_ProcFormatString =
 /* 2150 */	NdrFcShort( 0x0 ),	/* 0 */
 /* 2152 */	NdrFcShort( 0x0 ),	/* 0 */
 
-	/* Parameter id */
-
-
 	/* Parameter Node */
 
 /* 2154 */	NdrFcShort( 0x48 ),	/* Flags:  in, base type, */
@@ -2324,16 +2276,10 @@ static const AnvizOcx_MIDL_PROC_FORMAT_STRING AnvizOcx__MIDL_ProcFormatString =
 
 	/* Parameter newVal */
 
-
-	/* Parameter newVal */
-
 /* 2160 */	NdrFcShort( 0x48 ),	/* Flags:  in, base type, */
 /* 2162 */	NdrFcShort( 0x8 ),	/* x86 Stack size/offset = 8 */
 /* 2164 */	0x8,		/* FC_LONG */
 			0x0,		/* 0 */
-
-	/* Return value */
-
 
 	/* Return value */
 
@@ -4952,11 +4898,7 @@ static const unsigned short IBusPortData_FormatStringOffsetTable[] =
     (unsigned short) -1,
     (unsigned short) -1,
     (unsigned short) -1,
-    966,
-    1284,
-    2046,
-    2088,
-    2130
+    0
     };
 
 static const MIDL_STUBLESS_PROXY_INFO IBusPortData_ProxyInfo =
@@ -4980,9 +4922,9 @@ static const MIDL_SERVER_INFO IBusPortData_ServerInfo =
     0,
     0,
     0};
-CINTERFACE_PROXY_VTABLE(12) _IBusPortDataProxyVtbl = 
+CINTERFACE_PROXY_VTABLE(7) _IBusPortDataProxyVtbl = 
 {
-    &IBusPortData_ProxyInfo,
+    0,
     &IID_IBusPortData,
     IUnknown_QueryInterface_Proxy,
     IUnknown_AddRef_Proxy,
@@ -4990,12 +4932,7 @@ CINTERFACE_PROXY_VTABLE(12) _IBusPortDataProxyVtbl =
     0 /* (void *) (INT_PTR) -1 /* IDispatch::GetTypeInfoCount */ ,
     0 /* (void *) (INT_PTR) -1 /* IDispatch::GetTypeInfo */ ,
     0 /* (void *) (INT_PTR) -1 /* IDispatch::GetIDsOfNames */ ,
-    0 /* IDispatch_Invoke_Proxy */ ,
-    (void *) (INT_PTR) -1 /* IBusPortData::get_Buffer */ ,
-    (void *) (INT_PTR) -1 /* IBusPortData::get_Size */ ,
-    (void *) (INT_PTR) -1 /* IBusPortData::SetBuffer */ ,
-    (void *) (INT_PTR) -1 /* IBusPortData::get_Param */ ,
-    (void *) (INT_PTR) -1 /* IBusPortData::put_Param */
+    0 /* IDispatch_Invoke_Proxy */
 };
 
 
@@ -5004,19 +4941,14 @@ static const PRPC_STUB_FUNCTION IBusPortData_table[] =
     STUB_FORWARDING_FUNCTION,
     STUB_FORWARDING_FUNCTION,
     STUB_FORWARDING_FUNCTION,
-    STUB_FORWARDING_FUNCTION,
-    NdrStubCall2,
-    NdrStubCall2,
-    NdrStubCall2,
-    NdrStubCall2,
-    NdrStubCall2
+    STUB_FORWARDING_FUNCTION
 };
 
 CInterfaceStubVtbl _IBusPortDataStubVtbl =
 {
     &IID_IBusPortData,
     &IBusPortData_ServerInfo,
-    12,
+    7,
     &IBusPortData_table[-3],
     CStdStubBuffer_DELEGATING_METHODS
 };

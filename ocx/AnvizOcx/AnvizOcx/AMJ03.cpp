@@ -162,3 +162,20 @@ STDMETHODIMP CAMJ03::UnlinkBus(void)
 		delete m_bus;
 		return S_OK;
 	}
+STDMETHODIMP CAMJ03::IDataObject_GetData(FORMATETC* pformatetcIn, STGMEDIUM* pmedium)
+	{
+		return S_OK;
+	}
+STDMETHODIMP CAMJ03::GetData(LONG Index, VARIANT* Value)
+	{
+	// TODO: Add your implementation code here
+
+	return S_OK;
+	}
+
+STDMETHODIMP CAMJ03::SetData(LONG Index, VARIANT Value)
+	{
+	// TODO: Add your implementation code here
+
+	return S_OK;
+	}

@@ -42,6 +42,7 @@ interface IDevice: IDispatch{
 	[id(1), helpstring("method LinkBus"), hidden] HRESULT LinkBus([in] IBus * newValue);
 	[id(2), helpstring("method UnlinkBus"), hidden] HRESULT UnlinkBus(void);
 	};
+
 //{F35C0B16-BEC1-4c01-9B78-A6629038DC92}
 [
 	object,
@@ -312,12 +313,9 @@ interface IBusPortData : IDispatch{
 	pointer_default(unique)
 ]
 interface IBusPortData : IDispatch{
-	[propget, id(1), helpstring("property Buffer")] HRESULT Buffer([out, retval] LONG* pVal);
-	[propget, id(2), helpstring("property Size")] HRESULT Size([out, retval] LONG* pVal);
-	[id(3), helpstring("method SetBuffer")] HRESULT SetBuffer([in] LONG Buf, [in] LONG nSize);
-	[propget, id(4), helpstring("property Param")] HRESULT Param([in] LONG id, [out, retval] LONG* pVal);
-	[propput, id(4), helpstring("property Param")] HRESULT Param([in] LONG id, [in] LONG newVal);
-};
+	[id(1), helpstring("method GetData")] HRESULT GetData([in] LONG Index, [in,out] VARIANT* Value);
+	[id(2), helpstring("method SetData")] HRESULT SetData([in] LONG Index, [in] VARIANT Value);
+	};
 [
 	uuid(1C19F271-4C93-4F4B-8422-308103ED3887),
 	version(1.0),
@@ -450,14 +448,5 @@ library AnvizOcxLib
 	coclass DeviceLogs
 	{
 		[default] interface IDeviceLogs;
-	};
-
-	[
-		uuid(5CBCB977-4494-4760-87E3-DE8E0745A53B),
-		helpstring("BusPortData Class")
-	]
-	coclass BusPortData
-	{
-		[default] interface IBusPortData;
 	};
 };
