@@ -2,6 +2,8 @@
 #include <tchar.h>
 #include "dlg.h"
 #include "..\AnvizOcx\ProtocolTest\ComPort.h"
+#include  <cliext/deque>
+#include <cliext/stack>
 
 HANDLE p;
 struct  tag_machine machine[14];
