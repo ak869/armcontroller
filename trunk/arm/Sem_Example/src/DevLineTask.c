@@ -1,8 +1,42 @@
 #include "config.h"
 #include "com.h"
 
-static uint8 uart_buf[256];
+static uint8 uart_buf[265];
+extern uint32 log_id;
 #define SECONDPREBYTE	1	// (1000 * 10 / 9600)
+/*
+1	等待总线空闲
+	
+2	等待数据
+	
+3	有数据并符合标志 4 
+	不符合标志 1
+	
+4	有数据未满	4
+		    满  5
+	超时		2
+
+5   校验  	是	6
+			否	1
+	
+6	检查机号是	7
+	        否	分析包 是有数据包	等待 < ( nSize + 2 )(ms) 到 1
+	        		   否			1
+7	是有数据包  8
+	否			16
+	
+8	有数据未满	8
+			满  9
+	超时		2
+
+9   校验	是	16
+			否	1
+	
+16
+
+*/
+
+
 void DevLineTask(void  *pdata)
 {
 	int i,n;
@@ -14,18 +48,24 @@ void DevLineTask(void  *pdata)
 	
 	while(1)
 	{
-StartWhile:
+//			1	
+
 		chk = 0;
 		/*
 			等待总线空闲		
 		*/
+		
 		UART0RXLineClear();
+//2		
+StartWhile:		
+		chk = 0;	
 		/*
 			开始接受接受数据，协议分析
 		*/
 		t = UART0Getch();
 		if( t != PLT_VERSION )
 			continue;
+			
 		uart_buf[0] = t;	
 		chk = 0;			
 		for( i = 1; i < 8; i++ )
@@ -44,9 +84,11 @@ StartWhile:
 						不是，又有数据包跳空接受
 			为应答包，跳空接受
 		*/
-
+		
+//		6
 		cmd = uart_buf[CMD_CMD];
-		if( cmd & 0x80 || uart_buf[CMD_ADDR] != MACHINE_NO)
+		if( cmd & 0x80 || 
+			uart_buf[CMD_ADDR] != MACHINE_NO )
 		{//为应答包
 			if( cmd & 0x40 )
 			{//有数据包
@@ -58,11 +100,12 @@ StartWhile:
 	   
 	   if(  cmd & 0x40 )
 	   {
+// 			8	   
 	   		n = uart_buf[CMD_P1] + 8 + 2;
 	   		t = UART0GetchForWait(&err);
 	   		
 	   		if( err != OS_NO_ERR )
-	   			continue;
+	   			goto StartWhile;
 	   			
 	   		if( t != PLT_VERSION )
 	   			continue;
@@ -292,6 +335,42 @@ StartWhile:
 					nDataSize = 0;
 					break;				
 			}
+			break;
+		case DOWNLOADLOG:
+			{
+				uint32 id;
+				uint16 ba,pa;
+				addr.value[3] = uart_buf[CMD_P1];
+				addr.value[2] = uart_buf[CMD_P2];
+				addr.value[1] = uart_buf[CMD_P3];
+				addr.value[0] = uart_buf[CMD_P4];
+				id = addr.addr;
+				if( log_id - id > MAX_SAVELOGS )
+				{
+					id = log_id - MAX_SAVELOGS;
+				}
+				ba = (id % 33) << 4;
+				pa = id / 33;
+				pa %= (MAX_PAGE_COUNT - LOG_PAGE);
+				pa += LOG_PAGE;
+				
+				//read log
+				nDataSize = (log_id - id) * 16;
+				if( nDataSize > 256 )
+				{
+					nDataSize = 256;
+				}
+				if( pa == 4095 && 
+					ba + nDataSize > 528 )
+				{
+					nDataSize = 528 - ba;
+				}
+				at45db_Page_Read( pa, ba, uart_buf + DATA_PACK_DATA, nDataSize);
+				uart_buf[CMD_P4] = 0;
+				nDataSize--;
+				break;
+			}
+		case SETPOINTLOG:
 			break;
 		default:
 			uart_buf[CMD_P4] = ERR_CMD;

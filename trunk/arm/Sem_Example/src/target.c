@@ -99,6 +99,7 @@
 {
     T0IR = 0x01;
     VICVectAddr = 0;            //interrupt close 通知中断控制器中断结束
+    
     OSTimeTick();
 }
 
