@@ -1,7 +1,7 @@
 #include "config.h"
 
 
-static uint32 log_id;
+uint32 log_id;
 static uint16 curr_pa;
 
 uint8 calc_crc(uint8 * buf, int nSize)
@@ -166,7 +166,7 @@ void FsInit(void)
 	}
 */	
 }
-uint8 tempbuf[528];
+//uint8 tempbuf[528];
 void LogInit(void)
 {
 	uint16 pa;
@@ -262,7 +262,7 @@ void LogWrite(uint8 node, uint8 type, uint32 userid, uint32 ntime)
 	pa %= (MAX_PAGE_COUNT - LOG_PAGE);
 	
 	pa += LOG_PAGE;
-	at45db_Page_Read( pa, 0, tempbuf, 528 );
+//	at45db_Page_Read( pa, 0, tempbuf, 528 );
 	if( pa != curr_pa )
 	{
 		at45db_PageErase((uint16)pa);
@@ -271,7 +271,7 @@ void LogWrite(uint8 node, uint8 type, uint32 userid, uint32 ntime)
 	}
 	at45db_Buffer_Write( 2, ba, (uint8*)&log, 16 );
 	at45db_BuffertoPageNoErase( 2, pa);
-	at45db_Page_Read( pa, 0, tempbuf, 528 );
+//	at45db_Page_Read( pa, 0, tempbuf, 528 );
 	log_id++;	
 }
 

@@ -25,7 +25,7 @@ P2 - P4 :Flash addr
 
 //Log opertion
 #define DOWNLOADLOG				0x0a		//Short
-#define DELLOG					0x0b		//Short
+#define SETPOINTLOG				0x0b		//Short
 
 //Machine opertion
 /*

@@ -92,6 +92,7 @@ user	group
 
 #define LOG_PAGE			384
 #define LOG_SIZE			16
+#define MAX_SAVELOGS		1000
 
 
 

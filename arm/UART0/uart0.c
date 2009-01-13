@@ -244,18 +244,17 @@ uint8 UART0GetchForWait(uint8 *err)
 }
 void UART0RXLineClear(void)
 {
-	uint8 err;
 	OS_ENTER_CRITICAL();
-
+	
 	while(1)
 	{
 		if( (U0LSR & 0x00000001) == 0 )
 		{
-        	U0FCR |= 0x2;               /* 允许接收中断 */
+        	U0FCR |= 0x2;				//清除FIFO
     		OSTimeDly(2);
         }else
-        	break;
-//        err = U0RBR;
+       		break;
+
 	}
 	OS_ENTER_CRITICAL();	
 } 

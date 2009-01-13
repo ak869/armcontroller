@@ -28,9 +28,10 @@
 #define	TaskStkLengh	64			// 定义用户任务0的堆栈长度
 #define MainStkLengh	128
 OS_STK	MainStk [MainStkLengh];		// 定义用户任务0的堆栈
-OS_STK	ComTaskStk [TaskStkLengh];		// 定义用户任务0的堆栈
+OS_STK	DevTaskStk [TaskStkLengh];		// 定义用户任务0的堆栈
 OS_STK	InputTaskStk[TaskStkLengh];	// 定义Task1的堆栈
 OS_STK	TimeTaskStk[TaskStkLengh];
+OS_STK	HostTaskStk[TaskStkLengh];
 
 
 
@@ -40,7 +41,7 @@ OS_STK	TimeTaskStk[TaskStkLengh];
 ** 函数功能 ：uC/OS-II主函数，启动多任务环境。
 **********************************************************************************************************
 */
-void PcLineTask(void  *pdata);
+void DevLineTask(void  *pdata);
 void InputPinTask(void  *pdata);
 void mainTask(void *pdata);
 void TimeTask(void *pdata);
@@ -102,7 +103,8 @@ void mainTask(void *pdata)
 	}
 	OSTaskCreate (InputPinTask,(void *)0, &InputTaskStk[TaskStkLengh - 1], 3);	
 	OSTaskCreate ( TimeTask,(void *)0, &TimeTaskStk[TaskStkLengh - 1], 4);
-	OSTaskCreate ( HostLineTask,(void *)0, &ComTaskStk[TaskStkLengh - 1], 5);	
+	OSTaskCreate ( HostLineTask,(void *)0, &HostTaskStk[TaskStkLengh - 1], 5);
+	OSTaskCreate ( DevLineTask,(void *)0, &DevTaskStk[TaskStkLengh - 1], 6);	
 	while(1)
 	{
 		OSSemPend(QNoEmptySem, 0, &err);
