@@ -23,8 +23,11 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	CController ct;
 	BYTE group[6];
 	BYTE buf[528];
+	DWORD bytes;
+	DWORD id;
 	int i;
 	struct tag_doorstatus ds;
+	struct log_tag *log;
 	pt.OpenPort();
 
 	pt.CreateThread();
@@ -63,13 +66,32 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 			wsprintf(disp,"User_Add:Fail 0x%04lx",ct.GetErrCode());
 			OutputDebugString("User_Add:Fail\n");
 		}
-*/
+
 		if( ct.GetLongData( USER_ID_PAGE + 30, 0, (BYTE *)buf,200))
 			OutputDebugString("GetLongData:Success\n");
 		else
 		{
 			wsprintf(disp,"GetLongData:Fail 0x%04lx",ct.GetErrCode());
 			OutputDebugString(disp);
+		}
+		*/
+		id = 0;
+		while( 1 )
+		{
+			bytes = sizeof(buf);
+			if ( !ct.DownloadLog( id, (struct log_tag *)buf, &bytes) )
+				continue;
+			bytes /= 16;
+			for( i = 0; i < bytes; i++ )
+			{
+				log = (struct log_tag *)(buf + 16 * i) ;
+				wsprintf(disp,"[0x%08lx] Node:0x%02lx, type: 0x%2lx 20%02ld-%02ld-%02ld %02ld:%02ld:%02ld\n", 
+					log->id, log->node, 
+					log->time.year,	log->time.month, log->time.day, 
+					log->time.hour, log->time.minute, log->time.second );
+				OutputDebugString(disp);
+				id = log->id;
+			}
 		}
 	}
 	pt.ExitThread();

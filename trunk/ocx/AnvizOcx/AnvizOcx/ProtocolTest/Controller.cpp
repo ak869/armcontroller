@@ -503,3 +503,48 @@ void CController::UlinkBusPort()
 // 		delete m_port;
 		m_port = NULL;
 	}
+
+BOOL CController::DownloadLog(DWORD nStartID, struct log_tag *t, DWORD *nSize)
+{
+	BOOL ret;
+	union tag_flashaddr addr;
+	CPLT0001 *p = new CPLT0001();
+	addr.addr = nStartID;
+	
+	p->m_CMD = DOWNLOADLOG;
+	p->m_P1 = addr.value[3];
+	p->m_P2 = addr.value[2];
+	p->m_P3 = addr.value[1];
+	p->m_P4	= addr.value[0];
+	p->m_addr = m_addr;
+	
+	try
+	{
+		if( !m_port->SendData(p, 1000, NULL ) )
+			throw m_port->GetErrCode();
+
+		if( p->m_P4 != 0 )
+		{
+			throw (DWORD)p->m_P4;
+		}
+
+		if( p->m_dataSize + 1 <= *nSize )
+			*nSize = p->m_dataSize + 1;
+		else
+		{
+			*nSize = p->m_dataSize + 1;
+			throw (DWORD)ERR_BUFFER_SMALL;
+		}
+
+		CopyMemory( (VOID*)t, p->m_data, *nSize);
+		
+		ret = TRUE;
+	}
+	catch(DWORD ErrCode)
+	{
+		m_ErrCode = ErrCode;
+		ret = FALSE;
+	}
+	delete p;
+	return ret;
+}

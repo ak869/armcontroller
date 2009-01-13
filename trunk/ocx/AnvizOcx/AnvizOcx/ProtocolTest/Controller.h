@@ -192,6 +192,9 @@ public:
 	}
 };
 */
+
+#define	ERR_BUFFER_SMALL	(ERR_DEVICE + 0x1)
+
 class CController:public CDevice
 {
 private:
@@ -199,6 +202,7 @@ private:
 	DWORD m_ErrCode;
 	CBusProtocol * m_port;
 public:
+	BOOL DownloadLog(DWORD id, struct log_tag * t, DWORD *nSize);
 	DWORD GetErrCode(VOID);
 	BOOL User_Del(DWORD nID);
 	BOOL User_Add(DWORD nID, BYTE *nGroup, int nSize, BYTE attrib);
