@@ -164,7 +164,7 @@ CPortDataParam::CPortDataParam(BYTE *Buf, int nSize, DWORD nTimeOut, LPVOID lpar
 }
 CPortDataParam:: ~CPortDataParam()
 {
-	TCHAR disp[128];
+	TCHAR disp[256];
 	if( m_Event )
 		CloseHandle(m_Event);
 	if( m_Buffer )

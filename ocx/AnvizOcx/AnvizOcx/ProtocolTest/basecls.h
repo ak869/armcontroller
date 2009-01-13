@@ -58,7 +58,7 @@ public:
 	virtual ~CBusProtocol(){}
 	virtual BOOL SendData(CProtocol *p, DWORD nTimeout, LPVOID lParam) = 0;
 };
-
+#define ERR_DEVICE	0x3000
 class CDevice
 {
 public:
