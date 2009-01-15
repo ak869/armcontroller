@@ -54,6 +54,8 @@ void InputPinTask( void *pdata)
 		}
 		pin_prev_state = pin_state;
 		
+		
+		
 	}
 
 }

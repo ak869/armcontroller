@@ -83,13 +83,18 @@ void PinInit(void)
 	IO1DIR |= PIN_DOOR1;
 		
 }
+#define NORMAL_STATE	0
+#define ENROLL_STATE	1
+#define DEL_STATE		2
 void mainTask(void *pdata)
 {
 	uint8 err,ntype,nid;
+
 	uint8 mbuf[36 + 5];
 	PNODEMSG msg;
 	DATETIME *dt;	
 	int i;
+
 	pdata = pdata;
 	dt = ( DATETIME * )(mbuf + 36);
 	msg = ( PNODEMSG )mbuf;
@@ -104,7 +109,7 @@ void mainTask(void *pdata)
 	OSTaskCreate (InputPinTask,(void *)0, &InputTaskStk[TaskStkLengh - 1], 3);	
 	OSTaskCreate ( TimeTask,(void *)0, &TimeTaskStk[TaskStkLengh - 1], 4);
 	OSTaskCreate ( HostLineTask,(void *)0, &HostTaskStk[TaskStkLengh - 1], 5);
-	OSTaskCreate ( DevLineTask,(void *)0, &DevTaskStk[TaskStkLengh - 1], 6);	
+	OSTaskCreate ( DevLineTask,(void *)0, &DevTaskStk[TaskStkLengh - 1], 6);
 	while(1)
 	{
 		OSSemPend(QNoEmptySem, 0, &err);
@@ -112,6 +117,24 @@ void mainTask(void *pdata)
 		NMsgQRead( msg, 0,0);
 		ntype = msg->bits.node & MSG_CHILDREN_NODE_MASK;
 		nid = (msg->bits.node >> MSG_PARENT_NODE_BIT);
+		if( MACHINE_NO & 0x80 )
+		{
+			switch( ntype )
+			{
+				case READER_NODE:
+					switch(MACHINE_NO & 0xf)
+					{
+						case ENROLL_STATE:
+							break;
+						case DEL_STATE:
+							break;
+						default:
+							break;
+					}
+					break;
+			}
+			continue;	
+		}		
 		switch( ntype )
 		{
 			case READER_NODE:
@@ -320,13 +343,14 @@ void TimeTask(void *pdata)
 	int i;
 	uint8 mbuf[8];
 	struct tag_attrib *attr;
+	uint8 defSet_time;
 	DATETIME *dt;
 	PNODEMSG msg;
 	struct tag_timecount * t;
 	attr = (struct tag_attrib *)mbuf;
 	dt = (DATETIME *)mbuf;
 	msg = ( PNODEMSG )mbuf;
-	
+	defSet_time = 0xff;
 	pdata = pdata;
 	while(1)
 	{	
@@ -378,7 +402,23 @@ void TimeTask(void *pdata)
 				LogWrite( (i<<3) + MEGNET_NODE, 0, 0, dt->value);
 			}			
 		}
-		OS_EXIT_CRITICAL();	
+		if( MACHINE_NO == 0xA0 )
+		{
+			if( defSet_time == 0xff )
+				defSet_time = 6;
+			else if( defSet_time != 1 )
+			{
+				// beep
+				defSet_time --;
+			}
+			else 
+			{	//defSet
+				
+				defSet_time --;
+			}
+		}else
+			defSet_time = 0xff;
+		OS_EXIT_CRITICAL();
 		OSTimeDly(200);
 	}
 	
