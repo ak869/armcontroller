@@ -64,6 +64,8 @@ enum e_node
 #define READERDOOR15			0x70 
 #define READERDOOR16			0x78
 
+#define FLASH_NODE				0x80
+
 #define LOCAL_DOORS				1
 #define FULL_DOORS				16
 

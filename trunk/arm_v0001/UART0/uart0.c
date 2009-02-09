@@ -113,7 +113,7 @@ static OS_EVENT *Uart0Sem;
 	U0DLL = Fdiv % 256;						
     U0LCR = 0x03;                               /* 禁止访问分频因子寄存器 */
                                                 /* 且设置为8,1,n */
-	U0IER = 0x05;                               /* 允许接收和发送中断 */
+	U0IER = 0x00;                               /* 允许接收和发送中断 */
     U0FCR = 0x87;                               /* 初始化FIFO */
     
     
@@ -191,7 +191,7 @@ static OS_EVENT *Uart0Sem;
     OS_ENTER_CRITICAL();
     while (NByte-- > 0)
     {
-        UART0Putch(*Data++);
+    	UART0Putch(*Data++);
     }
     OS_EXIT_CRITICAL();
 } 
@@ -299,15 +299,16 @@ void UART0_Exception(void)
                 }
                 break;
             case 0x04:                                  /* 接收数据可用 */
-                OSSemPost(Uart0Sem);                    /* 通知接收任务 */
-                U0IER = U0IER & (~0x01);                /* 禁止接收及字符超时中断 */
+            	U0IER = U0IER & (~0x01);                /* 禁止接收及字符超时中断 */
+                OSSemPost(Uart0Sem);                    /* 通知接收任务 */                
                 break;
             case 0x06:                                  /* 接收线状态   */
                 temp = U0LSR;
                 break;
             case 0x0c:                                  /* 字符超时指示 */
+            	U0IER = U0IER & (~0x01);                /* 禁止接收及字符超时中断 */
                 OSSemPost(Uart0Sem);                    /* 通知接收任务 */
-                U0IER = U0IER & (~0x01);                /* 禁止接收及字符超时中断 */
+                
                 break;
             default :
                 break;

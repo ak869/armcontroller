@@ -3,14 +3,15 @@
 //Flash opertion
 
 
-#define PLT_VERSION				0xf1
+#define PLT_VERSION				0xf2
+#define PLT_TAB					0xdb
 /*
 P1		:nSize;
 P2 - P4 :Flash addr
 */
 #define GETLONGDATA				0x39		//Short
-#define SETLONGDATA				0x4a		//Long
-#define SETBYTEDATA				0x3b		//	Short
+#define SETLONGDATA				0x7a		//Long
+#define SETBYTEDATA				0x3b		//Short
 #define SETBITDATA				0x3c		//Short
 #define ESAREFLASH				0x3d
 
@@ -84,11 +85,6 @@ test	:	0xff;
 old		0xf5
 lu_new	0xf6
 my_new	0xf1
-
-
-
-
-
 
 */
 #endif

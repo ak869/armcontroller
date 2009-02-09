@@ -93,8 +93,18 @@ typedef double         fp64;                    /* double precision floating poi
 						    //VPB时钟频率，只能为(Fcclk / 4)的1、2、4倍
 
 #include    "target.h"              //This line may not be deleted 这一句不能删除
+
+#define		DEBUG		1
+#define 	WD_DEBUG	1
+#define 	FLASH_EN	1
+
 #include    "..\..\Arm_Pc\pc.h"
 
+#include	"com.h"
+#include 	"..\..\bus\bus.h"
+#include 	"..\..\bus\outpin.h"
+#include	"..\..\system\pindef.h"
+#include	"..\..\system\sysdef.h"
 #include 	"..\..\spi\spi.h"
 
 #define QUEUE_DATA_TYPE           uint8
@@ -105,11 +115,13 @@ typedef double         fp64;                    /* double precision floating poi
 #define EN_QUEUE_SIZE             1     /* 禁止(0)或允许(1)取得队列数据总容量 */
 #define EN_QUEUE_FLUSH            0     /* 禁止(0)或允许(1)清空队列           */
 
+
+
+
 #include 	"..\..\uart0\uart0.h"
 #include 	"..\..\uart0\uart1.h"
 
-#include	"..\..\system\pindef.h"
-#include	"..\..\system\sysdef.h"
+
 #include 	"..\..\flash\at45db161.h"
 
 #include 	"..\..\fs\fs.h"
@@ -117,8 +129,6 @@ typedef double         fp64;                    /* double precision floating poi
 #include 	"..\..\system\usr.h"
 
 #include	"msgqueue.h"
-
-#define 	MACHINE_NO	1
 
 uint32 GetOSPrioCur(void);
 

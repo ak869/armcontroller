@@ -97,11 +97,12 @@ uint8 SSPInit(uint8 Fdiv)
 	
 
     UseSPITaskPro = OS_PRIO_SELF;               /* 避免任务不按照规范编写程序而使访问SPI混乱 */
-    SSPReviceMbox = OSMboxCreate(NULL);         /* 用于中断返回收到的数据 */
-    if (SSPReviceMbox == NULL)
+ /*   
+ 	SSPReviceMbox = OSMboxCreate(NULL); 
     {
         return FALSE;
     }
+*/    
     SSPSem = OSSemCreate(1);                    /* 用于互斥访问SPI总线 */
     if (SSPSem != NULL)
     {
@@ -488,132 +489,6 @@ uint8 SSPEnd(void)
 		}
 
 */
-
-void SSP_Exception(void)
-{
-    uint8 temp,isr;
-    uint32 id;
-    int i;
-    
- //   OS_ENTER_CRITICAL();
-    isr = SSPMIS;
-    SSPICR  = 0x03;    
-	if( isr & 0x8 )
-	{	
-		i = SSP_SendSize - SSP_SendCount;
-		if( i == 0 )
-		{
-			SSPIMSC = 0x2;
-			goto Exit_SSP_Exception;
-		}
-		else if( i > 4 )
-			i = 4;
-		SSP_SendCount += i;
-		SSP_RecvCount += i;
-		SSP_ClearFifo -= i;			
-		while(i)
-		{
-			temp = SSPDR;
-			SSPDR = SSP_SendBuf[SSP_SendBufPos];
-			SSP_SendBufPos++;
-			i--;
-		}
-	}else if( isr & 0x2 )
-    {
-		if( SSP_ClearFifo > 0 )
-		{
-			i = SSP_ClearFifo;
-
-			SSP_RecvCount += i;
-			SSP_ClearFifo -= i;
-			temp = SSPSR;
-			while( (temp & 0x4) && i )
-			{
-				temp = SSPDR;
-				temp = SSPSR;
-				i--;
-			}		
-			SSP_RecvCount -= i;
-			SSP_ClearFifo += i; 		
-		}
-		i = SSP_SendSize - SSP_RecvCount;
-		if( i > 0 )
-		{
-			SSP_RecvCount += i;
-			temp = SSPSR;
-			while( (temp & 0x4) && i )
-			{
-				SSP_RecvBuf[SSP_RecvBufPos] = SSPDR;//SSP_RecvBufPos
-
-				SSP_RecvBufPos++;
-				temp = SSPSR;
-				i--;
-			}		
-			SSP_RecvCount -= i;	
-		}
-		SSPICR = 0x2;
-		SSPIMSC = 0;
-		OSMboxPost(SSPReviceMbox, SSP_RecvBuf);    	
-    }else if( isr & 0x4 )
-    {
-    	if( SSP_ClearFifo )
-    	{
-			i = SSP_ClearFifo;
-			if( i > 4 )
-			{
-				i = 4;
-			}
-			//ClearFifo_2
-			SSP_RecvCount += i;
-			SSP_ClearFifo -= i;
-			while( i )
-			{
-				temp = SSPDR;
-				i--;
-			}
-		}else
-		{
-			i = 4;
-			SSP_RecvCount += i;
-			while( i )
-			{
-				SSP_RecvBuf[SSP_RecvBufPos] = SSPDR;
-				SSP_RecvBufPos++;
-				i--;
-			}		
-			SSP_RecvCount -= i;
-
-		}
-		i = SSP_SendSize - SSP_RecvCount;
-		if( i == 0 )
-		{
-			SSPIMSC = 0;
-			OSMboxPost(SSPReviceMbox, SSP_RecvBuf);
-		} 
-		else
-		{
-			if( i < 4 )
-				SSPIMSC = 0x2;
-					
-			i = SSP_SendSize - SSP_SendCount;
-			if( i > 4 )
-				i = 4;
-			SSP_SendCount +=i;
-			while( i )
-			{
-				SSPDR = 0xff;
-				i--;
-			}
-		}   
-    
-    }
-
-		    
-
-Exit_SSP_Exception:
-    VICVectAddr = 0;            // 通知中断控制器中断结束
-//    OS_EXIT_CRITICAL();
-}
 
 /*********************************************************************************************************
 **                            End Of File

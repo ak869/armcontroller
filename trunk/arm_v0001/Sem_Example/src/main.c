@@ -46,25 +46,30 @@ void InputPinTask(void  *pdata);
 void mainTask(void *pdata);
 void TimeTask(void *pdata);
 void HostLineTask(void *pdata);
+void TestTask(void *pdata);
+//void TestTaskIO(void *pdata);
+void *QMsgBuf[16];
 
+OS_EVENT  *QMsg;
 OS_EVENT *QNoEmptySem, *QFullSem;
+extern OS_EVENT	*DevLineMsg;
 int main (void)
 {
 	OSInit ();
 	
-
-	QNoEmptySem = OSSemCreate(0);																								;
-	OSTaskCreate (mainTask,(void *)0, &MainStk[MainStkLengh - 1], 2);		
+//	NMsgQCreate();
+//	QMsg = OSQCreate(QMsgBuf, 16);
+	DevLineMsg = OSMboxCreate(NULL);
+	QNoEmptySem = OSSemCreate(0);
+//	OSTaskCreateExt( TestTask, (void *)0, &MainStk[MainStkLengh - 1], 6, 2, &MainStk[MainStkLengh - 1]																							;
+	OSTaskCreate (TestTask,(void *)0, &MainStk[MainStkLengh - 1], 2);		
 	OSStart ();
 	return 0;															
 }
 
-/*********************************************************************************************************
-**                            Task0 任务0
-**                     目标板初始化，创建Task1，向串口0发送字符串“I AM TASK A.”
-********************************************************************************************************/
 
-
+#define ENROLL_STATE 	0
+#define DEL_STATE		1
 
 struct tag_timecount
 {
@@ -77,15 +82,140 @@ struct tag_timecount
 	uint8 alarm_state	: 1;
 	uint8 reader_state	: 1;
 }timecount[FULL_DOORS];
-void PinInit(void)
-{	
-	IO1CLR = PIN_DOOR1;
-	IO1DIR |= PIN_DOOR1;
+
+
+void TestTask(void *pdata)
+{
+	uint8 err;
+	uint8 mbuf[36 + 5];
+	uint32 id;
+	PNODEMSG msg;
+	uint8 *buf,ntype,nid;
+	pdata = pdata;
+	msg = ( PNODEMSG )mbuf;
+	TargetInit();
+	OSTaskCreate ( InputPinTask,(void *)0, &InputTaskStk[TaskStkLengh - 1], 3);
+//	OSTaskCreate ( DevLineTask,(void *)0, &DevTaskStk[TaskStkLengh - 1], 6);
+	
+	while(1)
+	{
+		OSSemPend(QNoEmptySem, 0, &err);
+		msg->bits.size = 8;
+		NMsgQRead( msg, 0,0);
+		ntype = msg->bits.node & MSG_CHILDREN_NODE_MASK;
+		nid = (msg->bits.node >> MSG_PARENT_NODE_BIT);
+		if(nid < 16)
+		{
+			switch( ntype )
+			{
+				case READER_NODE:
+					id = *((uint32 *)msg->bits.data);
+					debug_print((uint8)id);
+					debug_print((uint8)(id>>8));
+					debug_print((uint8)(id>>16));
+					debug_print((uint8)(id>>24));					
+					break;
+			}
+		}
+		else
+		{
+			switch( msg->bits.node )
+			{
+				case FLASH_NODE:
+					{
+						uint8 *buf;
+						uint16 nSize;
+						union tag_flashaddr addr;
+						buf = (uint8*)(msg->bits.data[0]);
+						
+						switch( msg->bits.msg)		
+						{
+							case GETLONGDATA & 0xf:
+								{
+									addr.addr = 0;
+									addr.value[2] = buf[0];
+									addr.value[1] = buf[1];
+									addr.value[0] = buf[2];
+									nSize = (buf[3] << 8) + buf[4];			
+									if( nSize + addr.bits.ba < MAX_PAGE_SIZE && 
+										addr.bits.pa < MAX_PAGE_COUNT )
+									{
+										at45db_Page_Read(addr.bits.pa, addr.bits.ba, buf, nSize );
+										buf[nSize] = 0;
+										nSize ++;
+									}else
+									{
+										buf[0] = ERR_CMDPARAM;
+										nSize = 1;
+									}
+									OSMboxPost(DevLineMsg, (void *)nSize);
+								}
+								break;
+							case SETLONGDATA:
+								{
+									addr.addr = 0;
+									addr.value[2] = buf[0];
+									addr.value[1] = buf[1];
+									addr.value[0] = buf[2];
+									nSize = (buf[3] << 8) + buf[4];		
+									if( nSize + addr.bits.ba < MAX_PAGE_SIZE && 
+										addr.bits.pa < MAX_PAGE_COUNT )
+									{			
+										at45db_PagetoBuffer( 1, addr.bits.pa );
+										at45db_Buffer_Write( 1, addr.bits.ba, buf + 5 , nSize );
+										at45db_BuffertoPage( 1, addr.bits.pa );				
+										buf[0] = 0;
+									}
+									else
+									{
+										buf[0] = ERR_CMDPARAM;
+									}
+									nSize = 1;
+									OSMboxPost(DevLineMsg, (void *)nSize);
+								}
+								break;
+							case SETBITDATA:
+								{
+									uint8 t;
+									addr.addr = 0;
+									addr.value[2] = buf[CMD_P2];
+									addr.value[1] = buf[CMD_P3];
+									addr.value[0] = buf[CMD_P4];
+									nSize = buf[3];
+									
+									if( addr.bits.ba <= MAX_PAGE_SIZE && addr.bits.pa < MAX_PAGE_COUNT )
+									{			
+										at45db_PagetoBuffer( 1, addr.bits.pa );					
+										at45db_Buffer_Read( 1, addr.bits.ba, &t , 1 );					
+										if(buf[4] == 0)
+										{
+											t &= (~(0x1 << nSize ));
+										}
+										else
+											t |= (0x1 << nSize );
+										at45db_Buffer_Write( 1, addr.bits.ba, &t , 1 );
+										at45db_BuffertoPage( 1, addr.bits.pa );				
+										buf[0] = 0;
+									}
+									else
+									{
+										buf[0] = ERR_CMDPARAM;
+									}
+									nSize = 1;
+									OSMboxPost(DevLineMsg, (void *)nSize);
+								}			
+								break;
+						}
+					}
+					break;
+				
+			}
+		}
 		
+	}
+
 }
-#define NORMAL_STATE	0
-#define ENROLL_STATE	1
-#define DEL_STATE		2
+
 void mainTask(void *pdata)
 {
 	uint8 err,ntype,nid;
@@ -106,9 +236,9 @@ void mainTask(void *pdata)
 		timecount[i].megnet_time = 0xff;
 			
 	}
-	OSTaskCreate (InputPinTask,(void *)0, &InputTaskStk[TaskStkLengh - 1], 3);	
-	OSTaskCreate ( TimeTask,(void *)0, &TimeTaskStk[TaskStkLengh - 1], 4);
-	OSTaskCreate ( HostLineTask,(void *)0, &HostTaskStk[TaskStkLengh - 1], 5);
+//	OSTaskCreate ( InputPinTask,(void *)0, &InputTaskStk[TaskStkLengh - 1], 3);	
+//	OSTaskCreate ( TimeTask,(void *)0, &TimeTaskStk[TaskStkLengh - 1], 4);
+//	OSTaskCreate ( HostLineTask,(void *)0, &HostTaskStk[TaskStkLengh - 1], 5);
 	OSTaskCreate ( DevLineTask,(void *)0, &DevTaskStk[TaskStkLengh - 1], 6);
 	while(1)
 	{
@@ -146,10 +276,20 @@ void mainTask(void *pdata)
 					uint32 *t,id;
 					uint16 ugp,ugb,d;
 					uint16 empty_p,exist_p;
+
+					
 					gp = (struct tag_doorgroup *)mbuf;
 					attr = (struct tag_attrib *)mbuf;
 					ReadRTC(dt);
 					id = *((uint32 *)msg->bits.data);
+#ifdef WD_DEBUG
+					//debug_print					
+					 debug_print((uint8)id);
+					 debug_print((uint8)(id>>8));
+					 debug_print((uint8)(id>>16));
+					 debug_print((uint8)(id>>24));
+#else					
+					
 					at45db_Comp_uint32( USER_ID_PAGE, 0, id , (USER_ID_NUMBER ), &empty_p, &exist_p );
 					if( exist_p == (USER_ID_NUMBER ) )
 					{
@@ -256,6 +396,8 @@ void mainTask(void *pdata)
 					}
 ExitReaderNode:					
 					LogWrite( (nid<<3) + READER_NODE, state, id, dt->value);												
+#endif
+
 									
 				}
 				break;
@@ -324,7 +466,9 @@ ExitReaderNode:
 						}					
 						timecount[nid].door_time = attr->door_delay;
 						ReadRTC(dt);
+#ifdef FLASH_EN
 						LogWrite( (nid<<3) + DOOR_NODE, 0, 0, dt->value);
+#endif
 					}
 					
 					OS_EXIT_CRITICAL();
@@ -338,7 +482,7 @@ ExitReaderNode:
 	}			
 }
 
-void TimeTask(void *pdata)
+void TimeTask(void *pdata) //1s
 {
 	int i;
 	uint8 mbuf[8];
@@ -399,7 +543,9 @@ void TimeTask(void *pdata)
 				//read rtc
 				ReadRTC(dt);									
 				//write log
+#ifdef FLASH_EN				
 				LogWrite( (i<<3) + MEGNET_NODE, 0, 0, dt->value);
+#endif
 			}			
 		}
 		if( MACHINE_NO == 0xA0 )
