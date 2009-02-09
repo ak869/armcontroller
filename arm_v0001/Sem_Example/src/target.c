@@ -179,11 +179,11 @@
 	VICVectAddr12 = (uint32)WD1_Handler;		//EINT2
 	VICVectCntl12 = (0x20 | 0x10);
 	VICIntEnable |= 1 << 16;					
-/*	
+	
 	VICVectCntl11 = (0x20 | 0x0e);				//EINT0
 	VICVectAddr11 = (uint32)WD2_Handler;
 	VICIntEnable |= 1 << 14;
-*/
+
        
  }
 
@@ -212,11 +212,14 @@
     srand((uint32) TargetInit);
 //    PinInit();
 	
+	   
+	
     VICInit();
     
     Timer0Init();
-    WDInit();
-//    BusInit();
+ 	WDInit();
+  	BusInit();
+  	
 
     UART0Init(9600);
     UART1Init(9600);

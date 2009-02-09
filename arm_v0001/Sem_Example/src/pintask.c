@@ -27,8 +27,8 @@ void InputPinTask( void *pdata)//20ms
 	pdata = pdata;
 	pin_prev_state = pin_state = IOPIN;
 	
-	wd1_count_prev = wd1_count;
-	wd2_count_prev = wd2_count;
+	wd1_count_prev = 0;
+	wd2_count_prev = 0;
 	wd1_state = 0;
 	wd2_state = 0;
 	
@@ -46,8 +46,7 @@ void InputPinTask( void *pdata)//20ms
 					case 0:
 						break;
 					case 26:
-						//t = WD1_26_check();
-						t = wd1_data >> 6;
+						t = WD1_26_check();						
 						if( t != 0 )
 						{
 							msg->bits.size = 8;
@@ -87,7 +86,7 @@ void InputPinTask( void *pdata)//20ms
 						break;
 					case 26:
 						t = WD2_26_check();
-						//t = wd2_data;
+						
 						if( t != 0 )
 						{
 							msg->bits.size = 8;
