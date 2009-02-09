@@ -18,24 +18,41 @@ P0.7-MCS
 static OS_EVENT *FlashSem;
 static OS_EVENT *FlashBufSem;
 static uint8 UseFlashTaskPro, prev_level;
+
+
+
 uint8 FlashInit(void)
 {
+	
     UseFlashTaskPro = OS_PRIO_SELF;
     prev_level = FLASH_FREE;
     FlashSem = OSSemCreate(1);                    /* ”√”⁄ª•≥‚∑√Œ FLASH */
     FlashBufSem = OSSemCreate(1);
+;
     if (FlashSem != NULL && FlashBufSem != NULL )
     {
     	if( (at45db_Status_reg_read() & 0x80) == 0 )
     	{
     		prev_level = FLASH_A;
-    	}   
+    	} 
+/*
+      	PINSEL1 |= 0x300; 
+    	EXTMODE |= 8;
+		EXTPOLAR |= 8;
+*/		    	 
         return TRUE;
     }
     else
     {
         return FALSE;
     }	
+}
+
+void FlashBusy_Exception(void)
+{
+	EXTINT = 0x8;
+	OSSemPost( FlashSem );
+	VICVectAddr = 0x0;
 }
 /*
 void at45db_Buffer_UnLock(uint8 id)
@@ -55,29 +72,6 @@ void FlashStart(uint8 level, uint8 id)
     	OSSemPend(FlashSem, 0, &err);
     	UseFlashTaskPro = GetOSPrioCur();
     }
-    
-    
-/*    
-    err = prev_level & 0x0f;
-    id <<= 4;
-    if( err == FLASH_B )
-    {
-    	if( level == FLASH_C &&
-    	(prev_level & 0xf0) != id )
-    	{
-    		prev_level |=  id;
-    		break;
-    	}else
-    	{
-    		at45db_Status_reg_read();
-    		OSTimeDly(2);
-    	}
-    }else if( err == FLASH_D )
-    {
-    	at45db_Status_reg_read();
-    	OSTimeDly(2);
-    }
-*/    
     
     
 }

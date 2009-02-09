@@ -154,6 +154,8 @@
 //    extern void SSP_Handler(void);
     extern void UART0_Handler(void);
 	extern void UART1_Handler(void);
+	extern void WD1_Handler(void);
+	extern void WD2_Handler(void);
 	
     VICIntEnClr = 0xffffffff;
     VICDefVectAddr = (uint32)IRQ_Handler;
@@ -172,7 +174,17 @@
     
     VICVectAddr14 =  (uint32)UART1_Handler;
     VICVectCntl14 = (0x20 | 7);
-    VICIntEnable |= 1 << 7;    
+    VICIntEnable |= 1 << 7; 
+
+	VICVectAddr12 = (uint32)WD1_Handler;		//EINT2
+	VICVectCntl12 = (0x20 | 0x10);
+	VICIntEnable |= 1 << 16;					
+/*	
+	VICVectCntl11 = (0x20 | 0x0e);				//EINT0
+	VICVectAddr11 = (uint32)WD2_Handler;
+	VICIntEnable |= 1 << 14;
+*/
+       
  }
 
 /*********************************************************************************************************
@@ -198,16 +210,25 @@
 {
     OS_ENTER_CRITICAL();
     srand((uint32) TargetInit);
-    PinInit();
+//    PinInit();
+	
     VICInit();
+    
     Timer0Init();
+    WDInit();
+//    BusInit();
+
     UART0Init(9600);
     UART1Init(9600);
+
     SSPInit(2);
-    FlashInit();
+    
     RTCInit();
+#ifdef FLASH_EN    
+    FlashInit();
     FsInit();
-    LogInit();   
+    LogInit();
+#endif  
     OS_EXIT_CRITICAL();
 }
 

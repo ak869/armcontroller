@@ -42,9 +42,11 @@ IRQ_Handler	HANDLER IRQ_Exception
 ;/*¶¨Ê±Æ÷0ÖÐ¶Ï*/
 ;/*Time0 Interrupt*/
 Timer0_Handler  HANDLER Timer0_Exception
-SSP_Handler  HANDLER 	SSP_Exception
+;//SSP_Handler  HANDLER 	SSP_Exception
 UART0_Handler HANDLER	UART0_Exception
 UART1_Handler HANDLER	UART1_Exception
+WD1_Handler	HANDLER		WD1_Exception
+WD2_Handler	HANDLER		WD2_Exception
     END
 ;/*********************************************************************************************************
 ;**                            End Of File

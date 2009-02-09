@@ -1,9 +1,28 @@
 #include "config.h"
 #include "com.h"
-
-static uint8 uart_buf[265];
+#define MAX_UART_BUFFER	265
+static uint8 uart0_buf[MAX_UART_BUFFER];
 extern uint32 log_id;
 #define SECONDPREBYTE	1	// (1000 * 10 / 9600)
+#define CMD_BUSY		1
+#define CMD_READY		0
+typedef union
+{
+	struct
+	{
+		uint32	addr : 	8;
+		uint32	token:	4;
+		uint32	size :	12;
+		uint32 	check:	8;
+	}bits;
+	uint32 	value32;
+	uint8	value8[4];
+}THEADER,*PTHEADER;
+
+//XOR 8
+
+
+
 /*
 1	等待总线空闲
 	
@@ -35,49 +54,88 @@ extern uint32 log_id;
 16
 
 */
+#define TOKEN_REQUESTSIZE	0
+#define TOKEN_ALLOWSIZE		1
+#define TOKEN_PING			2
+#define TOKEN_DATAPACK		3
+#define TOKEN_BUSY			6
+#define TOKEN_ERRSIZE		7
 
-
+OS_EVENT	*DevLineMsg;
+extern OS_EVENT *QNoEmptySem;
+/*
+	ping
+	F2 01 02 00 03
+	F2 01 0A 00 0B
+*/
+void UART0WriteTab(uint8 *Data, uint16 NByte)
+{
+    OS_ENTER_CRITICAL();
+    while (NByte-- > 0)
+    {
+    	if( *Data == PLT_VERSION || *Data == PLT_TAB )
+    	{
+    		UART0Putch(PLT_TAB);
+    		UART0Putch(*Data++);
+    	}else 
+        	UART0Putch(*Data++);
+    }
+    OS_EXIT_CRITICAL();
+}
 void DevLineTask(void  *pdata)
 {
 	int i,n;
 	uint8 chk,cmd,t,test;
-	uint8 nDataSize,err;
-	union tag_flashaddr addr;	
+	uint16 nDataSize;
+	uint8 err,state;
+	uint8 mBuf[8];
+	PNODEMSG msg;	
+	PTHEADER header;	
 	pdata = pdata;
 
+	msg = (PNODEMSG)mBuf;
+	header = (PTHEADER)uart0_buf;
+	state = CMD_READY;
 	
+//	TargetInit();
 	while(1)
 	{
 //			1	
-
-		chk = 0;
 		/*
 			等待总线空闲		
 		*/
 		
-		UART0RXLineClear();
+//		UART0RXLineClear();
 //2		
-StartWhile:		
-		chk = 0;	
+StartWhile:	
 		/*
 			开始接受接受数据，协议分析
 		*/
 		t = UART0Getch();
 		if( t != PLT_VERSION )
-			continue;
-			
-		uart_buf[0] = t;	
-		chk = 0;			
-		for( i = 1; i < 8; i++ )
 		{
-	   		t = UART0GetchForWait(&err);
-		   	if( err != OS_NO_ERR )
-		   			goto StartWhile;		//超时
-			chk ^= t;
-			uart_buf[i] = t;
+			if( t == 0xdb)
+				t = UART0Getch();
+			continue;
 		}
+		chk = 0;
+		i = 0;
+		do{	
+			t = UART0Getch();
+			if( t == 0xdb )
+			{
+				t = UART0Getch();
+			}else if( t == PLT_VERSION )
+			{
+				continue;
+			}
+			chk ^= t;
+			uart0_buf[i] = t;
+			i++;
+		}
+		while( i < 4 );
 		if( chk )
-			continue;						//校验错误		
+			continue;						//校验错误
 
 		/*
 			为命令包，为本机地址，有数据包继续接受
@@ -86,49 +144,157 @@ StartWhile:
 		*/
 		
 //		6
-		cmd = uart_buf[CMD_CMD];
-		if( cmd & 0x80 || 
-			uart_buf[CMD_ADDR] != MACHINE_NO )
-		{//为应答包
-			if( cmd & 0x40 )
-			{//有数据包
-				t = uart_buf[CMD_P1];
-				OSTimeDly( (t + 2) / 5 ); 	//为9600 一个字节为1ms
-			}
-			continue;
+		if( header->bits.addr != MACHINE_NO )
+		{
+			t = header->bits.size;
+			OSTimeDly( (t + 2) / 5 ); 	//为9600 一个字节为1ms
 		}
-	   
-	   if(  cmd & 0x40 )
-	   {
-// 			8	   
-	   		n = uart_buf[CMD_P1] + 8 + 2;
-	   		t = UART0GetchForWait(&err);
-	   		
-	   		if( err != OS_NO_ERR )
-	   			goto StartWhile;
-	   			
-	   		if( t != PLT_VERSION )
-	   			continue;
-	   			   			
-	   		uart_buf[DATA_PACK_FLAG] = t;
+		nDataSize = header->bits.size + 1;
+		
+		switch( header->bits.token )
+		{
 
-	   		chk = 0;	
-	   		for( i = DATA_PACK_DATA; i < n; i++ )
-	   		{
-	   			t = UART0GetchForWait(&err);
-		   		if( err != OS_NO_ERR )
-		   			goto StartWhile; 			
+
+			case TOKEN_REQUESTSIZE:
+				if( nDataSize < MAX_UART_BUFFER )
+				{
+					header->bits.token = TOKEN_ALLOWSIZE;
+				}else
+					header->bits.token = TOKEN_ERRSIZE;
+				header->bits.token |= 0x08;	
+				chk = 0;
+				for( i = 0; i < 3; i++ )
+				{
+					chk^= uart0_buf[i];
+				}
+				header->bits.check = chk;
+				UART0Putch(PLT_VERSION);
+				
+				UART0WriteTab(uart0_buf, 4);
+				continue;
+				break;
+			case TOKEN_DATAPACK:
+				if( nDataSize > MAX_UART_BUFFER )
+				{
+					header->bits.token = TOKEN_ERRSIZE;;
+				}else		
+				if( state == CMD_BUSY )
+					header->bits.token = TOKEN_BUSY;
+				else 
+					break;			
+				i = 0;
+				do
+				{
+					t = UART0Getch();
+					if( t == PLT_TAB )
+					{
+						t = UART0Getch();
+					}else if( t == PLT_VERSION )
+					{
+						continue;
+					}
+					i++;					
+				}while( i < nDataSize );
+				header->bits.token |= 0x08;
+				chk = 0;
+				for( i = 0; i < 3; i++ )
+				{
+					chk^= uart0_buf[i];
+				}
+				header->bits.check = chk;				
+				UART0Putch(PLT_VERSION);				
+				UART0WriteTab(uart0_buf, 4);			
+				break;
+			case TOKEN_PING:
+			{
+				uint32 nSize;
+				nSize = 0;
+				if( state == CMD_BUSY )
+				{
+					nSize = (uint32)OSMboxAccept(DevLineMsg);
+					
+				}
+				if( nSize == 0 )
+				{
+					header->bits.token = 0x08 | TOKEN_PING;
+					header->bits.size = 0;
+				}
+				else
+				{
+					header->bits.token = TOKEN_DATAPACK | 0x8;
+					header->bits.size = nSize;
+					chk = 0;
+					for( i = 0; i < nSize; i++)
+						chk ^= uart0_buf[i+4];
+						uart0_buf[i+4] = chk;
+					state = CMD_READY;					
+				}
+				chk = 0;
+				for( i = 0; i < 3; i++ )
+				{
+					chk^= uart0_buf[i];
+				}
+				header->bits.check = chk;
+				nSize += 4;
+				UART0Putch(PLT_VERSION);				
+				UART0WriteTab(uart0_buf, nSize);
+				continue;
+				break;
+			}
+		}
+	   if( nDataSize - 1 )
+	   {
+// 			8
+			
+			chk = 0;
+			i = 4;
+			do{	
+				t = UART0Getch();
+				if( t == PLT_TAB )
+				{
+					t = UART0Getch();
+				}else if( t == PLT_VERSION )
+				{
+					continue;
+				}
 				chk ^= t;
-				uart_buf[i] = t;	   			
-	   		}
+				uart0_buf[i] = t;
+				i++;
+			}
+			while( i < nDataSize );
 	   		if( chk )
 	   			continue;	   		
 	   }
 		/*
 			处理协议		
 		*/
-				   		
+			   		
 /*解析命令*/
+/*
+	Flash:
+	CMD + ADDRESS + SIZE + Data
+	CMD	+ ADDRESS + BIT + Data
+	CMD + ADDRESS
+*/
+		cmd = uart0_buf[4];
+		switch(cmd)
+		{
+			case SETLONGDATA:
+			case GETLONGDATA:
+			case SETBITDATA:
+				msg->bits.msg = cmd & 0xf;
+				msg->bits.size = 8;
+				msg->bits.data[0] = (uint32)(uart0_buf + 1 + 4);
+				msg->bits.task = 2;
+				msg->bits.node = FLASH_NODE;
+				if( NMsgQWrite(msg) == QUEUE_OK )
+				{
+					OSSemPost(QNoEmptySem);
+					state = CMD_BUSY;
+				}				
+				break;
+		}
+/*
 		switch( cmd )
 		{
 		case ADDUSER:
@@ -216,98 +382,7 @@ StartWhile:
 			
 			}
 			break;
-		case GETLONGDATA:
-			{
-				nDataSize = uart_buf[CMD_P1];
-				addr.addr = 0;
-				addr.value[2] = uart_buf[CMD_P2];
-				addr.value[1] = uart_buf[CMD_P3];
-				addr.value[0] = uart_buf[CMD_P4];			
-				if( nDataSize + addr.bits.ba <= MAX_PAGE_SIZE && addr.bits.pa < MAX_PAGE_COUNT )
-				{
-					at45db_Page_Read(addr.bits.pa, addr.bits.ba, uart_buf + DATA_PACK_DATA , nDataSize );
-					uart_buf[CMD_P4] = 0;
-				}else
-				{
-					uart_buf[CMD_P4] = ERR_CMDPARAM;
-					nDataSize = 0;
-				}
-			}
-			break;
-		case SETLONGDATA:
-			{
-				nDataSize = uart_buf[CMD_P1];
-				addr.addr = 0;
-				addr.value[2] = uart_buf[CMD_P2];
-				addr.value[1] = uart_buf[CMD_P3];
-				addr.value[0] = uart_buf[CMD_P4];
-				
-				if( nDataSize + addr.bits.ba <= MAX_PAGE_SIZE && addr.bits.pa < MAX_PAGE_COUNT )
-				{			
-					at45db_PagetoBuffer( 1, addr.bits.pa );
-					at45db_Buffer_Write( 1, addr.bits.ba, uart_buf + DATA_PACK_DATA , nDataSize );
-					at45db_BuffertoPage( 1, addr.bits.pa );				
-					uart_buf[CMD_P4] = 0;
-				}
-				else
-				{
-					uart_buf[CMD_P4] = ERR_CMDPARAM;
-				}
-				nDataSize = 0;	
-			}
-			break;
-		case SETBYTEDATA:
-			{
-				addr.addr = 0;
-				addr.value[2] = uart_buf[CMD_P2];
-				addr.value[1] = uart_buf[CMD_P3];
-				addr.value[0] = uart_buf[CMD_P4];
-				
-				if( nDataSize + addr.bits.ba <= MAX_PAGE_SIZE && addr.bits.pa < MAX_PAGE_COUNT )
-				{			
-					at45db_PagetoBuffer( 1, addr.bits.pa );
-					at45db_Buffer_Write( 1, addr.bits.ba, uart_buf + CMD_P1 , 1 );
-					at45db_BuffertoPage( 1, addr.bits.pa );				
-					uart_buf[CMD_P4] = 0;
-				}
-				else
-				{
-					uart_buf[CMD_P4] = ERR_CMDPARAM;
-				}
-				nDataSize = 0;	
-			}		
-			break;
-		case SETBITDATA:
-			{
-				chk = uart_buf[CMD_P1];
-				nDataSize = chk & 0xf;
-				chk >>= 4;
-				addr.addr = 0;
-				addr.value[2] = uart_buf[CMD_P2];
-				addr.value[1] = uart_buf[CMD_P3];
-				addr.value[0] = uart_buf[CMD_P4];
-				
-				if( nDataSize + addr.bits.ba <= MAX_PAGE_SIZE && addr.bits.pa < MAX_PAGE_COUNT )
-				{			
-					at45db_PagetoBuffer( 1, addr.bits.pa );					
-					at45db_Buffer_Read( 1, addr.bits.ba, &t , 1 );					
-					if(nDataSize == 0)
-					{
-						t &= (~(0x1 << chk ));
-					}
-					else
-						t |= (0x1 << chk );
-					at45db_Buffer_Write( 1, addr.bits.ba, &t , 1 );
-					at45db_BuffertoPage( 1, addr.bits.pa );				
-					uart_buf[CMD_P4] = 0;
-				}
-				else
-				{
-					uart_buf[CMD_P4] = ERR_CMDPARAM;
-				}
-				nDataSize = 0;	
-			}			
-			break;
+
 		case SETSTATUE:
 			switch( uart_buf[CMD_P1] )
 			{
@@ -409,5 +484,7 @@ StartWhile:
 		   	i++;
 	   	}
 	   	UART0Write(uart_buf, i);
+*/	   	
 	}
+	
 }
